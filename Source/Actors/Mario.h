@@ -1,0 +1,46 @@
+//
+// Created by Lucas N. Ferreira on 08/09/23.
+//
+
+#pragma once
+#include "Actor.h"
+
+class Mario : public Actor
+{
+public:
+    explicit Mario(Game* game, float forwardSpeed = 1000.0f, float jumpSpeed = -600.0f);
+
+    void OnProcessInput(const Uint8* keyState) override;
+    void OnUpdate(float deltaTime) override;
+    void OnHandleKeyPress(const int key, const bool isPressed) override;
+
+    void OnHorizontalCollision(const float minOverlap, AABBColliderComponent* other) override;
+    void OnVerticalCollision(const float minOverlap, AABBColliderComponent* other) override;
+
+    void SetIsOnWall(bool isOnWall) {
+        mIsOnWall = isOnWall;
+    }
+    void SetWallSide(bool side) {
+        mWallSide = side; // true if left, false if right
+    }
+    void SetSpeed(float speed) {
+        mForwardSpeed = speed;
+    }
+
+    void Kill() override;
+    void Win();
+
+private:
+    void ManageAnimations();
+
+    float mForwardSpeed;
+    float mJumpSpeed;
+    bool mIsRunning;
+    bool mIsOnWall;
+    bool mWallSide;
+    bool mIsDying;
+
+    class RigidBodyComponent* mRigidBodyComponent;
+    class DrawAnimatedComponent* mDrawComponent;
+    class AABBColliderComponent* mColliderComponent;
+};
