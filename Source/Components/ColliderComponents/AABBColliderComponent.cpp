@@ -91,13 +91,18 @@ float AABBColliderComponent::DetectHorizontalCollision(RigidBodyComponent *rigid
         if (Intersect(*collider))
         {
             float minHorizontalOverlap = GetMinHorizontalOverlap(collider);
-            ResolveHorizontalCollisions(rigidBody, minHorizontalOverlap);
+            if(collider->GetLayer() != ColliderLayer::Collectable && collider->GetLayer() != ColliderLayer::Exit) {
+                ResolveHorizontalCollisions(rigidBody, minHorizontalOverlap);
+            }
 
             if(isPlayer) {
                 Mario* marioOwner = dynamic_cast<Mario*>(mOwner);
                 if (marioOwner && collider->GetLayer() == ColliderLayer::Blocks) {
                     marioOwner->SetIsOnWall(true);
                     marioOwner->SetWallSide(minHorizontalOverlap < 0.0f);
+                }
+                if(collider->GetLayer() == ColliderLayer::Exit && !marioOwner->WasChesseCollected()) {
+                    ResolveHorizontalCollisions(rigidBody, minHorizontalOverlap);
                 }
             }
 

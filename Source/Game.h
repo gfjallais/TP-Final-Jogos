@@ -95,6 +95,14 @@ public:
     void SetBackgroundImage(const std::string& imagePath, const Vector2 &position = Vector2::Zero, const Vector2& size = Vector2::Zero);
     void TogglePause();
 
+    std::vector<GameScene> GetGameSceneSequence() {
+        return mGameSceneSequence;
+    }
+
+    GameScene GetGameScene() {
+        return mGameScene;
+    }
+
     // Game-specific
     const class Mario* GetMario() { return mMario; }
 
@@ -146,6 +154,7 @@ private:
     // Track level state
     GameScene mGameScene;
     GameScene mNextScene;
+    std::vector<GameScene> mGameSceneSequence;
 
     // Background and camera
     Vector3 mBackgroundColor;

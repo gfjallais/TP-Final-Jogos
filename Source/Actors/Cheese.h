@@ -8,10 +8,8 @@ public:
     explicit Cheese(Game* game);
 
     void Kill() override;
-    void CollectCheese();
 
 private:
     class DrawSpriteComponent* mDrawComponent;
     class AABBColliderComponent* mColliderComponent;
-    bool mCollected;
 };

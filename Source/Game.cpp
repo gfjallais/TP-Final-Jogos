@@ -24,6 +24,7 @@
 #include "Actors/Block.h"
 #include "Actors/Spawner.h"
 #include "Actors/Cheese.h"
+#include "Actors/Exit.h"
 #include "UIElements/UIScreen.h"
 #include "Components/DrawComponents/DrawComponent.h"
 #include "Components/DrawComponents/DrawSpriteComponent.h"
@@ -53,7 +54,7 @@ Game::Game(int windowWidth, int windowHeight)
         ,mBackgroundSize(Vector2::Zero)
         ,mBackgroundPosition(Vector2::Zero)
 {
-
+    mGameSceneSequence = {GameScene::MainMenu, GameScene::Level1, GameScene::Level2};
 }
 
 bool Game::Initialize()
@@ -186,7 +187,7 @@ void Game::ChangeScene()
         // Reset HUD
         mGameTimeLimit = 400;
         mHUD->SetTime(mGameTimeLimit);
-        mHUD->SetLevelName("1-1");
+//        mHUD->SetLevelName("1-1");
 
         // Set background color
         SetBackgroundImage("../Assets/Sprites/Background.png", Vector2(0,0), Vector2(960,640));
@@ -199,12 +200,12 @@ void Game::ChangeScene()
 //        new DrawSpriteComponent(flag, "../Assets/Sprites/Background_Flag.png", 32.0f, 32.0f, 1);
 
         // Initialize actors
-        LoadLevel("../Assets/Levels/level2.csv", LEVEL_WIDTH, LEVEL_HEIGHT);
+        LoadLevel("../Assets/Levels/level1.csv", LEVEL_WIDTH, LEVEL_HEIGHT);
     }
     else if (mNextScene == GameScene::Level2)
     {
         // Start Music
-        mMusicHandle = mAudio->PlaySound("MusicUnderground.ogg", true);
+//        mMusicHandle = mAudio->PlaySound("MusicUnderground.ogg", true);
 
         // Set background color
         mBackgroundColor.Set(0.0f, 0.0f, 0.0f);
@@ -218,10 +219,10 @@ void Game::ChangeScene()
         // Reset HUD
         mGameTimeLimit = 400;
         mHUD->SetTime(mGameTimeLimit);
-        mHUD->SetLevelName("1-2");
+//        mHUD->SetLevelName("1-2");
 
         // Initialize actors
-        LoadLevel("../Assets/Levels/level1-2.csv", LEVEL_WIDTH, LEVEL_HEIGHT);
+        LoadLevel("../Assets/Levels/level2.csv", LEVEL_WIDTH, LEVEL_HEIGHT);
     }
 
     // Set new scene
@@ -300,6 +301,11 @@ void Game::BuildLevel(int** levelData, int width, int height)
             {
                 Cheese* cheese = new Cheese(this);
                 cheese->SetPosition(Vector2(x * TILE_SIZE, y * TILE_SIZE));
+            }
+            else if(tile == 13)
+            {
+                Exit* exit = new Exit(this);
+                exit->SetPosition(Vector2(x * TILE_SIZE, y * TILE_SIZE));
             }
             else // Blocks
             {

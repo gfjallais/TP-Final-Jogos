@@ -26,6 +26,12 @@ public:
     void SetSpeed(float speed) {
         mForwardSpeed = speed;
     }
+    void CollectCheese() {
+        mCollectedCheese = true;
+    }
+    bool WasChesseCollected() {
+        return mCollectedCheese;
+    }
 
     void Kill() override;
     void Win();
@@ -39,6 +45,7 @@ private:
     bool mIsOnWall;
     bool mWallSide;
     bool mIsDying;
+    bool mCollectedCheese;
 
     class RigidBodyComponent* mRigidBodyComponent;
     class DrawAnimatedComponent* mDrawComponent;

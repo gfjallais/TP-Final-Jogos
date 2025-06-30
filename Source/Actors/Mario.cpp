@@ -32,6 +32,8 @@ Mario::Mario(Game* game, const float forwardSpeed, const float jumpSpeed)
 
     mDrawComponent->SetAnimation("idle");
     mDrawComponent->SetAnimFPS(10.0f);
+
+    mCollectedCheese = false;
 }
 
 void Mario::OnProcessInput(const uint8_t* state)
@@ -95,15 +97,13 @@ void Mario::OnUpdate(float deltaTime)
         Kill();
     }
 
-    const float castleDoorPos = Game::LEVEL_WIDTH * Game::TILE_SIZE - 10 * Game::TILE_SIZE;
 
-    if (mGame->GetGamePlayState() == Game::GamePlayState::Leaving &&
-        mPosition.x >= castleDoorPos)
+    if (mGame->GetGamePlayState() == Game::GamePlayState::Leaving)
     {
-        // Stop Mario and set the game scene to Level 2
         mState = ActorState::Destroy;
-        mGame->SetGameScene(Game::GameScene::Level2, 3.5f);
-
+        auto gameScene = mGame->GetGameSceneSequence();
+        auto it = (std::find(gameScene.begin(), gameScene.end(), mGame->GetGameScene()) - gameScene.begin() + 1) % gameScene.size();
+        mGame->SetGameScene(gameScene[it]);
         return;
     }
 
@@ -158,10 +158,13 @@ void Mario::OnHorizontalCollision(const float minOverlap, AABBColliderComponent*
     if(other->GetLayer() == ColliderLayer::Blocks) {
         mIsOnWall = true;
     }
-    else if (other->GetLayer() == ColliderLayer::Collectable)
+    if (other->GetLayer() == ColliderLayer::Collectable)
     {
-//        mGame->CollectCheese();
+        CollectCheese();
         other->GetOwner()->Kill();
+    }
+    if (other->GetLayer() == ColliderLayer::Exit && mCollectedCheese) {
+        mGame->SetGamePlayState(Game::GamePlayState::Leaving);
     }
 }
 
@@ -177,8 +180,7 @@ void Mario::OnVerticalCollision(const float minOverlap, AABBColliderComponent* o
     }
     else if (other->GetLayer() == ColliderLayer::Blocks)
     {
-        if (!mIsOnGround)
-        {
+        if (!mIsOnGround) {
 //            mGame->GetAudio()->PlaySound("Bump.wav");
 //
 //            Block* block = static_cast<Block*>(other->GetOwner());
