@@ -15,7 +15,6 @@ enum class ColliderLayer
     Player,
     Enemy,
     Blocks,
-    Pole,
     Collectable
 };
 
@@ -27,8 +26,7 @@ public:
         {ColliderLayer::Player, {}},
         {ColliderLayer::Enemy,  {}},
         {ColliderLayer::Blocks, {ColliderLayer::Blocks}},
-        {ColliderLayer::Pole, {}},
-        {ColliderLayer::Collectable, {}}
+        {ColliderLayer::Collectable,  {}},
     };
 
     AABBColliderComponent(class Actor* owner, int dx, int dy, int w, int h,
@@ -39,6 +37,7 @@ public:
 
     float DetectHorizontalCollision(RigidBodyComponent *rigidBody);
     float DetectVertialCollision(RigidBodyComponent *rigidBody);
+    bool DetectHorizontalCollisionWithBlocks(RigidBodyComponent *rigidBody);
 
     void SetStatic(bool isStatic) { mIsStatic = isStatic; }
 

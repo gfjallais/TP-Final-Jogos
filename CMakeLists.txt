@@ -7,8 +7,7 @@ set(SDL2_image_DIR  "C:/Program Files/SDL/SDL2_image/cmake")
 set(SDL2_ttf_DIR  "C:/Program Files/SDL/SDL2_ttf/cmake")
 set(SDL2_mixer_DIR  "C:/Program Files/SDL/SDL2_mixer/cmake")
 
-# Configurando o nome e executável do projeto
-set(PROJECT_NAME "tp4-smb-1-2")
+set(PROJECT_NAME "tp-final")
 project(${PROJECT_NAME})
 
 find_package(SDL2 2.32.2 EXACT REQUIRED)
@@ -47,8 +46,8 @@ add_executable(${PROJECT_NAME}
         Source/Actors/Goomba.h
         Source/Actors/Spawner.cpp
         Source/Actors/Spawner.h
-        Source/Actors/Coin.h
-        Source/Actors/Coin.cpp
+        Source/Actors/Cheese.cpp
+        Source/Actors/Cheese.h
         Source/AudioSystem.cpp
         Source/AudioSystem.h
         Source/UIElements/UIScreen.h

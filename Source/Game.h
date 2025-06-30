@@ -16,8 +16,8 @@
 class Game
 {
 public:
-    static const int LEVEL_WIDTH = 215;
-    static const int LEVEL_HEIGHT = 15;
+    static const int LEVEL_WIDTH = 30;
+    static const int LEVEL_HEIGHT = 20;
     static const int TILE_SIZE = 32;
     static const int SPAWN_DISTANCE = 700;
     static const int TRANSITION_TIME = 1;
@@ -77,7 +77,7 @@ public:
     class AudioSystem* GetAudio() { return mAudio; }
 
     // UI functions
-    void PushUI(class UIScreen* screen) { mUIStack.emplace_back(screen); }
+    void PushUI(class UIScreen* screen) { mUIStack.emplace_back(screen);}
     const std::vector<class UIScreen*>& GetUIStack() { return mUIStack; }
 
     // Window functions
@@ -90,7 +90,6 @@ public:
 
     void SetGameScene(GameScene scene, float transitionTime = .0f);
     void ResetGameScene(float transitionTime = .0f);
-    void RenderSceneTransition();
     void UnloadScene();
 
     void SetBackgroundImage(const std::string& imagePath, const Vector2 &position = Vector2::Zero, const Vector2& size = Vector2::Zero);
@@ -101,12 +100,6 @@ public:
 
     void SetGamePlayState(GamePlayState state) { mGamePlayState = state; }
     GamePlayState GetGamePlayState() const { return mGamePlayState; }
-
-    SDL_Renderer* GetRenderer() const { return mRenderer; }
-
-    void CollectCoin();
-    int GetCoinsTotal() { return mGameCoins; }
-    void IncrementScore(int points);
 
 private:
     void ProcessInput();
@@ -119,7 +112,6 @@ private:
     void ChangeScene();
     SceneManagerState mSceneManagerState;
     float mSceneManagerTimer;
-    float mCurrTimer;
 
     // HUD functions
     void UpdateLevelTime(float deltaTime);
@@ -167,9 +159,6 @@ private:
 
     float mGameTimer;
     int mGameTimeLimit;
-
-    int mGameScore;
-    int mGameCoins;
 
     SDL_Texture *mBackgroundTexture;
     Vector2 mBackgroundSize;

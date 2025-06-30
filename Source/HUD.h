@@ -22,8 +22,6 @@ public:
 
     // Reinsert the HUD elements
     void SetTime(int time);
-    void SetScore(int score);
-    void SetCoin(int coin);
 
     void SetLevelName(const std::string& levelName);
 
@@ -33,5 +31,4 @@ private:
     UIText* mLevelName;
     UIText* mLivesCount;
     UIText* mTimeText;
-    UIText* mCoinsCounter;
 };

@@ -17,46 +17,27 @@ UIScreen::UIScreen(Game* game, const std::string& fontName)
 	,mState(UIState::Active)
     ,mSelectedButtonIndex(-1)
 {
-    // --------------
-    // TODO - PARTE 1-1
-    // --------------
+	// Add to UI Stack
+	mGame->PushUI(this);
 
-    // TODO 1.: Adicione a UIScreen à lista de telas de UI do jogo (mGame) com PushUI(this).
-    mGame->PushUI(this);
-    // TODO 2.: Utilize o método LoadFont do jogo (mGame) para carregar a fonte padrão,
-    //  passada como parâmetro (fontName).
+    // Load default font
     mFont = mGame->LoadFont(fontName);
 }
 
 UIScreen::~UIScreen()
 {
-    // --------------
-    // TODO - PARTE 1-1
-    // --------------
-
-    // TODO 1.: Percorra a listas de textos (mTexts) e delete cada UIText. Limpe a lista ao final do laço.
-    for(auto text : mTexts) {
-        delete text;
+    for (auto t : mTexts) {
+        delete t;
     }
     mTexts.clear();
 
-    // --------------
-    // TODO - PARTE 1-2
-    // --------------
-
-    // TODO 1.: Percorra a lista de botões (mButtons) e delete cada UIButton. Limpe a lista ao final do laço.
-    for(auto button : mButtons) {
-        delete button;
+    for (auto b : mButtons) {
+        delete b;
     }
-    mButtons.clear();
+	mButtons.clear();
 
-    // --------------
-    // TODO - PARTE 1-3
-    // --------------
-
-    // TODO 1.: Percorra a lista de imagens (mImages) e delete cada UIImage. Limpe a lista ao final do laço.
-    for(auto image : mImages) {
-        delete image;
+    for (auto img : mImages) {
+        delete img;
     }
     mImages.clear();
 }
@@ -68,33 +49,18 @@ void UIScreen::Update(float deltaTime)
 
 void UIScreen::Draw(SDL_Renderer *renderer)
 {
-    // --------------
-    // TODO - PARTE 1-1
-    // --------------
-
-    // TODO 1.: Percorra a listas de textos (mTexts) e chame o método Draw de cada UIText, passando o renderer
-    //  e a posição da tela (mPos).
-    for(auto text : mTexts) {
-        text->Draw(renderer, mPos);
+    for (auto t : mTexts) {
+        t->Draw(renderer, mPos);
     }
 
-    // --------------
-    // TODO - PARTE 1-2
-    // --------------
-
-    // TODO 1.: Percorra a lista de botões (mButtons) e chame o método Draw de cada UIButton, passando o renderer
-    for(auto button : mButtons) {
-        button->Draw(renderer, mPos);
+    for (auto img : mImages) {
+        img->Draw(renderer, mPos);
     }
 
-    // --------------
-    // TODO - PARTE 1-3
-    // --------------
-
-    // TODO 1.: Percorra a lista de imagens (mImages) e chame o método Draw de cada UIImage, passando o renderer
-    for(auto image : mImages) {
-        image->Draw(renderer, mPos);
+    for (auto b : mButtons) {
+        b->Draw(renderer, mPos);
     }
+
 }
 
 void UIScreen::ProcessInput(const uint8_t* keys)
@@ -104,48 +70,35 @@ void UIScreen::ProcessInput(const uint8_t* keys)
 
 void UIScreen::HandleKeyPress(int key)
 {
-    // --------------
-    // TODO - PARTE 1-2
-    // --------------
-
-    // TODO 1.: Verifique se a tecla pressionada é W (SDLK_w), S (SDLK_s) ou Enter (SDLK_RETURN). Se a tecla for W,
-    //  diminua o índice do botão selecionado (mSelectedButtonIndex) e destaque o botão anterior. Se o índice for
-    //  menor que 0, defina-o como o último botão da lista. Se a tecla for S, aumente o índice do botão selecionado
-    //  e destaque o próximo botão. Se o índice for maior ou igual ao tamanho da lista, defina-o como 0 (o primeiro botão).
-    //  Se a tecla for Enter, verifique se o índice do botão selecionado é válido (maior ou igual a 0 e menor que
-    //  o tamanho da lista). Se for, chame o método OnClick do botão selecionado.
-    if (key == SDLK_w) {
-        if (mSelectedButtonIndex >= 0 && mSelectedButtonIndex < mButtons.size()) {
+    if(key == SDLK_w)
+    {
+        if (mSelectedButtonIndex >= 0) {
             mButtons[mSelectedButtonIndex]->SetHighlighted(false);
-        }
 
-        mSelectedButtonIndex--;
+            mSelectedButtonIndex--;
+            if(mSelectedButtonIndex < 0) {
+                mSelectedButtonIndex = mButtons.size() - 1;
+            }
 
-        if (mSelectedButtonIndex < 0) {
-            mSelectedButtonIndex = static_cast<int>(mButtons.size()) - 1;
-        }
-
-        if (mSelectedButtonIndex >= 0 && mSelectedButtonIndex < mButtons.size()) {
             mButtons[mSelectedButtonIndex]->SetHighlighted(true);
         }
     }
-    else if (key == SDLK_s) {
-        if (mSelectedButtonIndex >= 0 && mSelectedButtonIndex < mButtons.size()) {
+    else if(key == SDLK_s)
+    {
+        if (mSelectedButtonIndex >= 0) {
             mButtons[mSelectedButtonIndex]->SetHighlighted(false);
-        }
 
-        mSelectedButtonIndex++;
+            mSelectedButtonIndex++;
+            if(mSelectedButtonIndex >= mButtons.size()) {
+                mSelectedButtonIndex = 0;
+            }
 
-        if (mSelectedButtonIndex >= static_cast<int>(mButtons.size())) {
-            mSelectedButtonIndex = 0;
-        }
-
-        if (mSelectedButtonIndex >= 0 && mSelectedButtonIndex < mButtons.size()) {
             mButtons[mSelectedButtonIndex]->SetHighlighted(true);
         }
     }
-    else if (key == SDLK_RETURN) {
-        if (mSelectedButtonIndex >= 0 && mSelectedButtonIndex < static_cast<int>(mButtons.size())) {
+    else if(key == SDLK_RETURN)
+    {
+        if (mSelectedButtonIndex >= 0 && mSelectedButtonIndex < mButtons.size()) {
             mButtons[mSelectedButtonIndex]->OnClick();
         }
     }
@@ -158,50 +111,28 @@ void UIScreen::Close()
 
 UIText* UIScreen::AddText(const std::string &name, const Vector2 &pos, const Vector2 &dims, const int pointSize, const int unsigned wrapLength)
 {
-    // --------------
-    // TODO - PARTE 1-1
-    // --------------
-
-    // TODO 1.: Crie um novo UIText com o nome, fonte (mFont), tamanho do ponto (pointSize), comprimento de quebra (wrapLength),
-    //  posição (pos), dimensões (dims) e cor branca. Armazene o ponteiro em uma variável t. A seguir, adicione o UIText
-    //  à lista de textos (mTexts) e retorne o ponteiro t.
-    auto t = new UIText(name, mFont, pointSize, wrapLength, pos, dims);
-    mTexts.push_back(t);
+    auto t = new UIText(name, mFont, pointSize, wrapLength, pos, dims, Color::White);
+    mTexts.emplace_back(t);
     return t;
 }
 
 UIButton* UIScreen::AddButton(const std::string& name, const Vector2 &pos, const Vector2& dims, std::function<void()> onClick)
 {
-    // --------------
-    // TODO - PARTE 1-2
-    // --------------
+    auto b = new UIButton(name, mFont, onClick, pos, dims);
+	mButtons.emplace_back(b);
 
-    // TODO 1.: Crie um novo UIButton com o nome, fonte (mFont), função de clique (onClick),
-    //  posição (pos), dimensões (dims) e cor laranja. Adicione o botão à lista de botões (mButtons).
-    auto b = new UIButton(name, mFont, onClick, pos, dims, Vector3(255, 165, 0));
-    mButtons.push_back(b);
-
-    // TODO 2.: Se a lista de botões (mButtons) tiver apenas um botão, defina o índice do botão
-    //  selecionado (mSelectedButtonIndex) como 0 e destaque o botão (b->SetHighlighted(true)).
-    if (mButtons.size() == 1) {
+    // Set the first button as highlighted
+    if(mButtons.size() == 1) {
         mSelectedButtonIndex = 0;
         b->SetHighlighted(true);
     }
 
-    // TODO 3.: Retorne o ponteiro do botão criado (b).
     return b;
 }
 
 UIImage* UIScreen::AddImage(const std::string &imagePath, const Vector2 &pos, const Vector2 &dims, const Vector3 &color)
 {
-    // --------------
-    // TODO - PARTE 1-3
-    // --------------
-
-    // TODO 1.: Crie um novo UIImage com o caminho da imagem (imagePath), posição (pos), dimensões (dims) e cor (color).
-    //  Armazene o ponteiro em uma variável img. A seguir, adicione o UIImage à lista de imagens (mImages) e retorne
-    //  o ponteiro img.
-    auto img = new UIImage(mGame->GetRenderer(), imagePath, pos, dims, color);
-    mImages.push_back(img);
+    auto img = new UIImage(imagePath, pos, dims, color);
+    mImages.emplace_back(img);
     return img;
 }

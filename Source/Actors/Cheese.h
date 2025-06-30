@@ -1,18 +1,14 @@
-//
-// Created by Lucas N. Ferreira on 30/09/23.
-//
-
 #pragma once
 
 #include "Actor.h"
 
-class Coin : public Actor
+class Cheese : public Actor
 {
 public:
-    explicit Coin(Game* game);
+    explicit Cheese(Game* game);
 
     void Kill() override;
-    void CollectCoin();
+    void CollectCheese();
 
 private:
     class DrawSpriteComponent* mDrawComponent;

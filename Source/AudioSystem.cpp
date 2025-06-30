@@ -9,36 +9,18 @@ SoundHandle SoundHandle::Invalid;
 // (Defaults to 8 channels)
 AudioSystem::AudioSystem(int numChannels)
 {
-    // --------------
-    // TODO - PARTE 4
-    // --------------
-
-    // TODO 1.: Inicialize a SDL_mixer com a taxa de amostragem de 44100 Hz, formato padrão, 2 canais (estéreo) e
-    //  tamanho do buffer de 2048 bytes.
     Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-
-    // TODO 2. : Utilize a função Mix_AllocateChannels para alocar o número de canais especificado.
     Mix_AllocateChannels(numChannels);
-
-    // TODO 3.: Redimensione o vetor mChannels para o número de canais especificado.
     mChannels.resize(numChannels);
 }
 
 // Destroy the AudioSystem
 AudioSystem::~AudioSystem()
 {
-    // --------------
-    // TODO - PARTE 4
-    // --------------
-
-    // TODO 1.: Percorra o mapa mSounds e libere cada Mix_Chunk usando Mix_FreeChunk. Em seguida, limpe o mapa mSounds
-    //  e feche o áudio com Mix_CloseAudio.
-    for (auto& pair : mSounds) {
-        if (pair.second != nullptr) {
-            Mix_FreeChunk(pair.second);
-        }
+    for (auto& sound : mSounds)
+    {
+        Mix_FreeChunk(sound.second);
     }
-
     mSounds.clear();
 
     Mix_CloseAudio();
@@ -47,22 +29,14 @@ AudioSystem::~AudioSystem()
 // Updates the status of all the active sounds every frame
 void AudioSystem::Update(float deltaTime)
 {
-    // --------------
-    // TODO - PARTE 4
-    // --------------
-
-    // TODO 1.: Percorra o vetor mChannels e verifique se cada canal é válido (ou seja, se está tocando um som).
-    //  Se o canal não estiver tocando um som (Mix_Playing retorna 0), remova o canal do mapa mHandleMap
-    //  e reinicialize o canal chamando Reset().
-    for (int i = 0; i < mChannels.size(); i++) {
-
-        if (Mix_Playing(i) == 0) {
-            auto it = mHandleMap.find(mChannels[i]);
-            if (it != mHandleMap.end()) {
-                mHandleMap.erase(it);
+    for(int i = 0; i < mChannels.size(); i++)
+    {
+        if(mChannels[i].IsValid())
+        {
+            if(!Mix_Playing(i)) {
+                mHandleMap.erase(mChannels[i]);
+                mChannels[i].Reset();
             }
-
-            mChannels[i].Reset();
         }
     }
 }
@@ -75,88 +49,62 @@ void AudioSystem::Update(float deltaTime)
 //       "Assets/Sounds/ChompLoop.wav".
 SoundHandle AudioSystem::PlaySound(const std::string& soundName, bool looping)
 {
+    // Get the sound with the given name
     Mix_Chunk *sound = GetSound(soundName);
 
-    // --------------
-    // TODO - PARTE 4
-    // --------------
-
-    // TODO 1.: Verifique se o som foi carregado corretamente, ou seja, se o ponteiro sound é diferente de nullptr.
-    //  Se for nullptr, registre um erro no log e retorne SoundHandle::Invalid.
     if (sound == nullptr) {
-        // Log error - you might want to use your logging system here
-        SDL_Log("Failed to load sound: %s", soundName.c_str());
+        SDL_Log("[AudioSystem] PlaySound couldn't find sound for %s", soundName.c_str());
         return SoundHandle::Invalid;
     }
 
+    // Select an available channel
     int availableChannel = -1;
-
-    // TODO 2.: Percorra o vetor mChannels e verifique com a função IsValid() se algum canal está disponível
-    //  (ou seja, se não está tocando nenhum som). Se encontrar um canal disponível, armazene o índice do canal
-    //  em `availableChannel` e quebre do loop.
-    for (int i = 0; i < mChannels.size(); i++) {
-        if (!mChannels[i].IsValid()) {
+	for(int i = 0; i < mChannels.size(); i++) {
+        if(!mChannels[i].IsValid()) {
             availableChannel = i;
             break;
         }
     }
 
-    // TODO 3.: Se não encontrar um canal disponível, ou seja, `availableChannel` ainda for -1,
-    //  percorra o mapa mHandleMap e verifique se algum som com o mesmo nome já está tocando.
-    //  Se encontrar, armazene o canal desse som em `availableChannel`, registre um log informando que
-    //  o som está sendo parado, remova o som do mapa mHandleMap e quebre do loop.
-    if (availableChannel == -1) {
-        for (auto it = mHandleMap.begin(); it != mHandleMap.end(); ++it) {
-            if (it->second.mSoundName == soundName) {
-                availableChannel = it->second.mChannel;
-                SDL_Log("Stopping sound with same name: %s", soundName.c_str());
-                mHandleMap.erase(it);
+    if(availableChannel == -1) {
+        for(auto &handleMap : mHandleMap) {
+            if(handleMap.second.mSoundName == soundName) {
+                availableChannel = handleMap.second.mChannel;
+                SDL_Log("[AudioSystem] PlaySound ran out of channels playing %s! Stopping %s", soundName.c_str(), handleMap.second.mSoundName.c_str());
+                mHandleMap.erase(handleMap.first);
                 break;
             }
         }
     }
 
-    // TODO 4.: Se ainda não encontrar um canal disponível, percorra o mapa mHandleMap e verifique se algum som
-    //  está tocando em loop (mIsLooping é true). Se encontrar, pare esse som chamando StopSound,
-    //  armazene o canal desse som em `availableChannel`, registre um log informando que o som está sendo parado
-    //  e quebre do loop.
-    if (availableChannel == -1) {
-        for (auto it = mHandleMap.begin(); it != mHandleMap.end(); ++it) {
-            if (it->second.mIsLooping) {
-                availableChannel = it->second.mChannel;
-                SDL_Log("Stopping looping sound: %s", it->second.mSoundName.c_str());
-                StopSound(it->first);
+    if(availableChannel == -1) {
+        for (auto &handleMap: mHandleMap) {
+            if (handleMap.second.mIsLooping) {
+                StopSound(handleMap.first);
+                availableChannel = handleMap.second.mChannel;
+
+                SDL_Log("[AudioSystem] PlaySound ran out of channels playing %s! Stopping %s", soundName.c_str(), handleMap.second.mSoundName.c_str());
                 break;
             }
         }
     }
 
-    // TODO 5.: Se ainda não encontrar um canal disponível, registre um log informando que o som mais antigo no mapa
-    //  mHandleMap está sendo parado, chame StopSound passando o primeiro som do mapa mHandleMap e
-    //  armazene o canal desse som em `availableChannel`.
-    if (availableChannel == -1 && !mHandleMap.empty()) {
-        auto it = mHandleMap.begin();
-        availableChannel = it->second.mChannel;
-        SDL_Log("Stopping oldest sound: %s", it->second.mSoundName.c_str());
-        StopSound(it->first);
+    if(availableChannel == -1) {
+        SDL_Log("[AudioSystem] PlaySound ran out of channels playing %s! Stopping %s", soundName.c_str(), mHandleMap.begin()->second.mSoundName.c_str());
+
+        StopSound(mHandleMap.begin()->first);
+        availableChannel = mHandleMap.begin()->second.mChannel;
     }
 
-    // TODO 6.: Incremente o mLastHandle em 1 para gerar um novo identificador de som.
+    // Reinsert sound handle
     mLastHandle++;
 
-    // TODO 7. : Crie uma nova HandleInfo com o nome do som, o canal disponível e se o som está em loop.
-    //  Em seguida, adicione essa HandleInfo ao mapa mHandleMap com o mLastHandle como chave.
-    //  Além disso, armazene o mLastHandle no vetor mChannels na posição do canal disponível.
-    HandleInfo handleInfo;
-    handleInfo.mSoundName = soundName;
-    handleInfo.mChannel = availableChannel;
-    handleInfo.mIsLooping = looping;
-
-    mHandleMap[mLastHandle] = handleInfo;
+    // Create handle info
+    HandleInfo hi = {soundName, availableChannel, looping};
+    mHandleMap.emplace(mLastHandle, hi);
     mChannels[availableChannel] = mLastHandle;
 
-    // TODO 8.: Use Mix_PlayChannel para tocar o som no canal disponível. Não se esqueça de passar -1
-    //  para o parâmetro de loop se looping for true, ou 0 se não for.
+    // Play sound on selected channel
     Mix_PlayChannel(availableChannel, sound, looping ? -1 : 0);
 
     return mLastHandle;
@@ -165,71 +113,46 @@ SoundHandle AudioSystem::PlaySound(const std::string& soundName, bool looping)
 // Stops the sound if it is currently playing
 void AudioSystem::StopSound(SoundHandle sound)
 {
-    // --------------
-    // TODO - PARTE 4
-    // --------------
-
-    // TODO 1. : Verifique se o som existe no mapa mHandleMap. Se não existir, registre um log de erro
-    //  e retorne. Se existir, use Mix_HaltChannel para parar o som no canal associado, apague
-    //  o som do mapa mHandleMap e reinicialize o canal no vetor mChannels com a função Reset().
-    auto it = mHandleMap.find(sound);
-    if (it == mHandleMap.end()) {
-        SDL_Log("Sound handle not found in StopSound");
+    if(mHandleMap.find(sound) == mHandleMap.end())
+    {
+        SDL_Log("[AudioSystem] StopSound couldn't find handle %s", sound.GetDebugStr());
         return;
     }
 
-    Mix_HaltChannel(it->second.mChannel);
-
-    mChannels[it->second.mChannel].Reset();
-
-    mHandleMap.erase(it);
+    Mix_HaltChannel(mHandleMap[sound].mChannel);
+    mHandleMap.erase(sound);
+    mChannels[mHandleMap[sound].mChannel].Reset();
 }
 
 // Pauses the sound if it is currently playing
 void AudioSystem::PauseSound(SoundHandle sound)
 {
-    // --------------
-    // TODO - PARTE 4
-    // --------------
-
-    // TODO 1. : Verifique se o som existe no mapa mHandleMap. Se não existir, registre um log de erro
-    //  e retorne. Se existir, verifique se o som já está pausado (mIsPaused). Se não estiver pausado,
-    //  use Mix_Pause para pausar o som no canal associado e defina mIsPaused desse som como true no
-    //  mapa mHandleMap.
-    auto it = mHandleMap.find(sound);
-    if (it == mHandleMap.end()) {
-        SDL_Log("Sound handle not found in PauseSound");
+    if(mHandleMap.find(sound) == mHandleMap.end())
+    {
+        SDL_Log("[AudioSystem] PauseSound couldn't find handle %s", sound.GetDebugStr());
         return;
     }
 
-    if (!it->second.mIsPaused) {
-        Mix_Pause(it->second.mChannel);
-        it->second.mIsPaused = true;
+    if(!mHandleMap[sound].mIsPaused)
+    {
+        Mix_Pause(mHandleMap[sound].mChannel);
+        mHandleMap[sound].mIsPaused = true;
     }
-
 }
 
 // Resumes the sound if it is currently paused
 void AudioSystem::ResumeSound(SoundHandle sound)
 {
-    // --------------
-    // TODO - PARTE 4
-    // --------------
-
-    // TODO 1. : Verifique se o som existe no mapa mHandleMap. Se não existir, registre um log de erro
-    //  e retorne. Se existir, verifique se o som está pausado (mIsPaused). Se estiver pausado,
-    //  use Mix_Resume para retomar o som no canal associado e defina mIsPaused desse som como false no
-    //  mapa mHandleMap.
-    auto it = mHandleMap.find(sound);
-    if (it == mHandleMap.end()) {
-        SDL_Log("Sound handle not found in ResumeSound");
+    if(mHandleMap.find(sound) == mHandleMap.end())
+    {
+        SDL_Log("[AudioSystem] ResumeSound couldn't find handle %s", sound.GetDebugStr());
         return;
     }
 
-    if (it->second.mIsPaused) {
-        Mix_Resume(it->second.mChannel);
-
-        it->second.mIsPaused = false;
+    if(mHandleMap[sound].mIsPaused)
+    {
+        Mix_Resume(mHandleMap[sound].mChannel);
+        mHandleMap[sound].mIsPaused = false;
     }
 }
 
