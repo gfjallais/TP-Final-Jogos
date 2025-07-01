@@ -15,6 +15,8 @@ Mario::Mario(Game* game, const float forwardSpeed, const float jumpSpeed)
         , mIsDying(false)
         , mForwardSpeed(forwardSpeed)
         , mJumpSpeed(jumpSpeed)
+        , mWallJumpCooldown(0)
+        , mCanWallJump(false)
 {
     mRigidBodyComponent = new RigidBodyComponent(this, 1.0f, 5.0f);
     mColliderComponent = new AABBColliderComponent(this, 0, 0, Game::TILE_SIZE - 4.0f,Game::TILE_SIZE,
@@ -65,15 +67,12 @@ void Mario::OnHandleKeyPress(const int key, const bool isPressed)
     if(mGame->GetGamePlayState() != Game::GamePlayState::Playing) return;
 
     // Jump
-    if (key == SDLK_SPACE && isPressed && (mIsOnGround || mIsOnWall))
+    if (key == SDLK_SPACE && isPressed && mIsOnGround || (mCanWallJump && !mIsOnWall))
     {
-        float xPos = mRigidBodyComponent->GetVelocity().x;
-        if (mIsOnWall) {
-            xPos += mWallSide ? 200.0f : - 200.0f;
-        }
-        mRigidBodyComponent->SetVelocity(Vector2(xPos, mJumpSpeed));
+        mRigidBodyComponent->SetVelocity(Vector2(mRigidBodyComponent->GetVelocity().x, mJumpSpeed));
+        mCanWallJump = false;
+        mWallJumpCooldown = 0;
         mIsOnGround = false;
-        SetSpeed(700.0f);
 
         // Play jump sound
 //        mGame->GetAudio()->PlaySound("Jump.wav");
@@ -85,18 +84,22 @@ void Mario::OnUpdate(float deltaTime)
     SetSpeed(1000.0f);
     if (mRigidBodyComponent && mRigidBodyComponent->GetVelocity().y != 0) {
         mIsOnGround = false;
-        SetSpeed(700.0f);
+    }
+
+    if(mWallJumpCooldown > 0) {
+        mCanWallJump = true;
+        mWallJumpCooldown--;
+    } else {
+        mCanWallJump = false;
     }
 
     // Limit Mario's position to the camera view
     mPosition.x = Math::Max(mPosition.x, mGame->GetCameraPos().x);
 
     // Kill mario if he falls below the screen
-    if (mGame->GetGamePlayState() == Game::GamePlayState::Playing && mPosition.y > mGame->GetWindowHeight())
-    {
+    if (mGame->GetGamePlayState() == Game::GamePlayState::Playing && mPosition.y > mGame->GetWindowHeight()) {
         Kill();
     }
-
 
     if (mGame->GetGamePlayState() == Game::GamePlayState::Leaving)
     {
@@ -157,6 +160,7 @@ void Mario::OnHorizontalCollision(const float minOverlap, AABBColliderComponent*
     }
     if(other->GetLayer() == ColliderLayer::Blocks) {
         mIsOnWall = true;
+        mWallJumpCooldown = 20;
     }
     if (other->GetLayer() == ColliderLayer::Collectable)
     {

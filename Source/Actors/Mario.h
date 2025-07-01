@@ -33,6 +33,10 @@ public:
         return mCollectedCheese;
     }
 
+    void PerformWallJump();
+
+    void UpdateWallJumpLogic(const Uint8* keyState);
+
     void Kill() override;
     void Win();
 
@@ -46,6 +50,9 @@ private:
     bool mWallSide;
     bool mIsDying;
     bool mCollectedCheese;
+    int mWallJumpCooldown;
+    bool mCanWallJump;
+    bool mWasMovingAwayFromWall;
 
     class RigidBodyComponent* mRigidBodyComponent;
     class DrawAnimatedComponent* mDrawComponent;
