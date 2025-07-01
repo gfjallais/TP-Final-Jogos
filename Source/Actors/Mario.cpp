@@ -65,7 +65,7 @@ void Mario::OnHandleKeyPress(const int key, const bool isPressed)
     if(mGame->GetGamePlayState() != Game::GamePlayState::Playing) return;
 
     // Jump
-    if ((key == SDLK_SPACE || key == 119) && isPressed && (mIsOnGround || !mIsOnWall))
+    if ((key == SDLK_SPACE || key == 119) && isPressed && (mIsOnGround || (mCanWallJump && !mIsOnWall)))
     {
         mRigidBodyComponent->SetVelocity(Vector2(mRigidBodyComponent->GetVelocity().x, mJumpSpeed));
         mCanWallJump = false;
