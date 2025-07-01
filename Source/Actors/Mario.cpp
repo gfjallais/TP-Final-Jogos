@@ -15,8 +15,6 @@ Mario::Mario(Game* game, const float forwardSpeed, const float jumpSpeed)
         , mIsDying(false)
         , mForwardSpeed(forwardSpeed)
         , mJumpSpeed(jumpSpeed)
-        , mWallJumpCooldown(0)
-        , mCanWallJump(false)
 {
     mRigidBodyComponent = new RigidBodyComponent(this, 1.0f, 5.0f);
     mColliderComponent = new AABBColliderComponent(this, 0, 0, Game::TILE_SIZE - 4.0f,Game::TILE_SIZE,
@@ -67,12 +65,13 @@ void Mario::OnHandleKeyPress(const int key, const bool isPressed)
     if(mGame->GetGamePlayState() != Game::GamePlayState::Playing) return;
 
     // Jump
-    if (key == SDLK_SPACE && isPressed && mIsOnGround || (mCanWallJump && !mIsOnWall))
+    if ((key == SDLK_SPACE || key == 119) && isPressed && (mIsOnGround || mIsOnWall))
     {
         mRigidBodyComponent->SetVelocity(Vector2(mRigidBodyComponent->GetVelocity().x, mJumpSpeed));
         mCanWallJump = false;
         mWallJumpCooldown = 0;
         mIsOnGround = false;
+        SetSpeed(700.0f);
 
         // Play jump sound
 //        mGame->GetAudio()->PlaySound("Jump.wav");
@@ -100,6 +99,7 @@ void Mario::OnUpdate(float deltaTime)
     if (mGame->GetGamePlayState() == Game::GamePlayState::Playing && mPosition.y > mGame->GetWindowHeight()) {
         Kill();
     }
+
 
     if (mGame->GetGamePlayState() == Game::GamePlayState::Leaving)
     {
@@ -168,6 +168,7 @@ void Mario::OnHorizontalCollision(const float minOverlap, AABBColliderComponent*
         other->GetOwner()->Kill();
     }
     if (other->GetLayer() == ColliderLayer::Exit && mCollectedCheese) {
+        mGame->GetAudio()->PlaySound("Victoire.wav");
         mGame->SetGamePlayState(Game::GamePlayState::Leaving);
     }
 }
@@ -191,4 +192,20 @@ void Mario::OnVerticalCollision(const float minOverlap, AABBColliderComponent* o
 //            block->OnBump();
         }
     }
+    if (other->GetLayer() == ColliderLayer::Collectable)
+    {
+        CollectCheese();
+        other->GetOwner()->Kill();
+    }
+    if (other->GetLayer() == ColliderLayer::Exit && mCollectedCheese) {
+        mGame->GetAudio()->PlaySound("Victoire.wav");
+        mGame->SetGamePlayState(Game::GamePlayState::Leaving);
+    }
+}
+
+void Mario::CollectCheese() {
+    mCollectedCheese = true;
+    mForwardSpeed = 600.0f;
+    mJumpSpeed = -500.0f;
+    mGame->GetAudio()->PlaySound("cheese.wav");
 }

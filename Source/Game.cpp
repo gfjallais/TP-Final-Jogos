@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------
 // From Game Programming in C++ by Sanjay Madhav
 // Copyright (C) 2017 Sanjay Madhav. All rights reserved.
-// 
+//
 // Released under the BSD License
 // See LICENSE in root directory for full details.
 // ----------------------------------------------------------------
@@ -164,6 +164,7 @@ void Game::ChangeScene()
     // Scene Manager FSM: using if/else instead of switch
     if (mNextScene == GameScene::MainMenu)
     {
+        mAudio->StopAllSounds();
         // Set background color
         mBackgroundColor.Set(107.0f, 140.0f, 255.0f);
 
@@ -245,11 +246,11 @@ void Game::LoadMainMenu()
     const Vector2 button1Pos = Vector2(mWindowWidth/2.0f - buttonSize.x/2.0f, titlePos.y + titleSize.y + 30.0f);
     const Vector2 button2Pos = Vector2(mWindowWidth/2.0f - buttonSize.x/2.0f, button1Pos.y + buttonSize.y + 5.0f);
 
-    mainMenu->AddButton("1 Player", button1Pos, buttonSize, [this]() {
+    mainMenu->AddButton("Jogar", button1Pos, buttonSize, [this]() {
         SetGameScene(GameScene::Level1);
     });
 
-    mainMenu->AddButton("2 Players", button2Pos, buttonSize, nullptr);
+    // mainMenu->AddButton("2 Players", button2Pos, buttonSize, nullptr);
 }
 
 void Game::LoadLevel(const std::string& levelName, const int levelWidth, const int levelHeight)
