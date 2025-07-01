@@ -26,9 +26,9 @@
 
 CheeseRun é um jogo de plataforma 2D single-player que homenageia o clássico jogo online Transformice. Desenvolvido em C++ com SDL2, o projeto busca resgatar a nostalgia e proporcionar uma experiência fluida e desafiadora para fãs do gênero.
 
-O jogador controla um pequeno rato cujo objetivo é coletar um pedaço de queijo e levá-lo até a toca, superando obstáculos pelo caminho. Entre as mecânicas, destacam-se o pulo, a movimentação lateral e o icônico *Wall Jump*, que exige domínio técnico e coordenação precisa.
+O jogador controla um rato cujo objetivo é coletar um pedaço de queijo e levá-lo até a toca, superando obstáculos pelo caminho. Entre as mecânicas, destacam-se o pulo, a movimentação lateral e o icônico *Wall Jump*, que exige domínio técnico e coordenação precisa.
 
-O jogo possui três fases com dificuldade crescente. A cada fase, o jogador é desafiado com novos elementos como buracos, distâncias maiores e uso intensivo de mecânicas específicas. O tempo para completar a fase é limitado, e erros como cair em buracos ou não alcançar o objetivo a tempo reiniciam a fase.
+O jogo possui duas fases com dificuldade crescente. A cada fase, o jogador é desafiado com novos elementos como buracos, distâncias maiores e uso intensivo de mecânicas específicas. O tempo para completar a fase é limitado, e erros como não alcançar o objetivo a tempo reiniciam a fase.
 
 ---
 
