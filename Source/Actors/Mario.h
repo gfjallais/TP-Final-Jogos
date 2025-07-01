@@ -26,9 +26,7 @@ public:
     void SetSpeed(float speed) {
         mForwardSpeed = speed;
     }
-    void CollectCheese() {
-        mCollectedCheese = true;
-    }
+    void CollectCheese();
     bool WasChesseCollected() {
         return mCollectedCheese;
     }

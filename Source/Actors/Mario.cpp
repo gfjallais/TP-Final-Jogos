@@ -65,7 +65,7 @@ void Mario::OnHandleKeyPress(const int key, const bool isPressed)
     if(mGame->GetGamePlayState() != Game::GamePlayState::Playing) return;
 
     // Jump
-    if (key == SDLK_SPACE && isPressed && (mIsOnGround || mIsOnWall))
+    if (key == 119 && isPressed && (mIsOnGround || mIsOnWall))
     {
         float xPos = mRigidBodyComponent->GetVelocity().x;
         if (mIsOnWall) {
@@ -164,6 +164,7 @@ void Mario::OnHorizontalCollision(const float minOverlap, AABBColliderComponent*
         other->GetOwner()->Kill();
     }
     if (other->GetLayer() == ColliderLayer::Exit && mCollectedCheese) {
+        mGame->GetAudio()->PlaySound("Victoire.wav");
         mGame->SetGamePlayState(Game::GamePlayState::Leaving);
     }
 }
@@ -187,4 +188,20 @@ void Mario::OnVerticalCollision(const float minOverlap, AABBColliderComponent* o
 //            block->OnBump();
         }
     }
+    if (other->GetLayer() == ColliderLayer::Collectable)
+    {
+        CollectCheese();
+        other->GetOwner()->Kill();
+    }
+    if (other->GetLayer() == ColliderLayer::Exit && mCollectedCheese) {
+        mGame->GetAudio()->PlaySound("Victoire.wav");
+        mGame->SetGamePlayState(Game::GamePlayState::Leaving);
+    }
+}
+
+void Mario::CollectCheese() {
+    mCollectedCheese = true;
+    mForwardSpeed = 600.0f;
+    mJumpSpeed = -500.0f;
+    mGame->GetAudio()->PlaySound("cheese.wav");
 }
