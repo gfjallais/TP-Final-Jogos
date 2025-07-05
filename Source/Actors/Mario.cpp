@@ -9,12 +9,16 @@
 #include "../Components/DrawComponents/DrawPolygonComponent.h"
 #include <algorithm>
 
-Mario::Mario(Game* game, const float forwardSpeed, const float jumpSpeed)
+Mario::Mario(Game* game, const float forwardSpeed, const float jumpSpeed, const bool isPlayer1)
         : Actor(game)
         , mIsRunning(false)
         , mIsDying(false)
         , mForwardSpeed(forwardSpeed)
         , mJumpSpeed(jumpSpeed)
+        , mIsPlayer1(isPlayer1)
+        , mIsLeaving(false)
+        , mSpellMode(false)
+        , mSpellCount(2)
 {
     mRigidBodyComponent = new RigidBodyComponent(this, 1.0f, 5.0f);
     mColliderComponent = new AABBColliderComponent(this, 0, 0, Game::TILE_SIZE - 4.0f,Game::TILE_SIZE,
@@ -36,27 +40,74 @@ Mario::Mario(Game* game, const float forwardSpeed, const float jumpSpeed)
     mCollectedCheese = false;
 }
 
+bool Mario::PressedLeft(const uint8_t* state) {
+    if(mIsPlayer1) {
+        return state[SDL_SCANCODE_A];
+    }
+    return state[SDL_SCANCODE_LEFT];
+}
+
+bool Mario::PressedRight(const uint8_t* state) {
+    if(mIsPlayer1) {
+        return state[SDL_SCANCODE_D];
+    }
+    return state[SDL_SCANCODE_RIGHT];
+}
+
+bool Mario::PressedUp(const uint8_t* state) {
+    if(mIsPlayer1) {
+        return state[SDL_SCANCODE_W];
+    }
+    return state[SDL_SCANCODE_UP];
+}
+
+bool Mario::PressedDown(const uint8_t* state) {
+    if(mIsPlayer1) {
+        return state[SDL_SCANCODE_S];
+    }
+    return state[SDL_SCANCODE_DOWN];
+}
+
 void Mario::OnProcessInput(const uint8_t* state)
 {
     if(mGame->GetGamePlayState() != Game::GamePlayState::Playing) return;
+    if(mSpellMode) return;
 
-    if (state[SDL_SCANCODE_D])
+    if (PressedRight(state))
     {
         mRigidBodyComponent->ApplyForce(Vector2::UnitX * mForwardSpeed);
         mRotation = 0.0f;
         mIsRunning = true;
     }
 
-    if (state[SDL_SCANCODE_A])
+    if (PressedLeft(state))
     {
         mRigidBodyComponent->ApplyForce(Vector2::UnitX * -mForwardSpeed);
         mRotation = Math::Pi;
         mIsRunning = true;
     }
 
-    if (!state[SDL_SCANCODE_D] && !state[SDL_SCANCODE_A])
+    if ((state[SDL_SCANCODE_X] && mIsPlayer1) || (state[SDL_SCANCODE_M] && !mIsPlayer1)) {
+        if(mSpellCount > 0) {
+            ToggleSpellMode();
+            SDL_Log("Toggled spellMode %d", mSpellMode);
+        }
+    }
+
+    if (!PressedLeft(state) && !PressedRight(state))
     {
         mIsRunning = false;
+    }
+}
+
+void Mario::CastSpell(int x, int y) {
+    SDL_Log("Cast Spell Called");
+    SDL_Log("%d", mSpellCount);
+    if(mSpellCount > 0) {
+        Block* block = new Block(mGame, "../Assets/Sprites/Blocks/rock.png", false);
+        block->SetPosition(Vector2(x, y));
+        mSpellCount--;
+        ToggleSpellMode();
     }
 }
 
@@ -65,7 +116,7 @@ void Mario::OnHandleKeyPress(const int key, const bool isPressed)
     if(mGame->GetGamePlayState() != Game::GamePlayState::Playing) return;
 
     // Jump
-    if ((key == SDLK_SPACE || key == 119) && isPressed && (mIsOnGround || (mCanWallJump && !mIsOnWall)))
+    if (((key == SDLK_w && mIsPlayer1) || (key == SDLK_UP && !mIsPlayer1)) && isPressed && (mIsOnGround || (mCanWallJump && !mIsOnWall)))
     {
         mRigidBodyComponent->SetVelocity(Vector2(mRigidBodyComponent->GetVelocity().x, mJumpSpeed));
         mCanWallJump = false;
@@ -136,7 +187,9 @@ void Mario::ManageAnimations()
 void Mario::Kill()
 {
     mIsDying = true;
-    mGame->SetGamePlayState(Game::GamePlayState::GameOver);
+    if(mGame->AlivePlayers() == 1) {
+        mGame->SetGamePlayState(Game::GamePlayState::GameOver);
+    }
     mDrawComponent->SetAnimation("Dead");
 
     mRigidBodyComponent->SetEnabled(false);
@@ -165,11 +218,24 @@ void Mario::OnHorizontalCollision(const float minOverlap, AABBColliderComponent*
     if (other->GetLayer() == ColliderLayer::Collectable)
     {
         CollectCheese();
-        other->GetOwner()->Kill();
     }
     if (other->GetLayer() == ColliderLayer::Exit && mCollectedCheese) {
-        mGame->GetAudio()->PlaySound("Victoire.wav");
-        mGame->SetGamePlayState(Game::GamePlayState::Leaving);
+        if(GetIsLeaving()) return;
+
+        SetIsLeaving(true);
+
+        SDL_Log("%d", mGame->PlayersLeaving());
+        SDL_Log("%d", mGame->AlivePlayers());
+
+        if(mGame->PlayersLeaving() == mGame->AlivePlayers()) {
+            mGame->SetGamePlayState(Game::GamePlayState::Leaving);
+            mGame->GetAudio()->PlaySound("victory.wav");
+        }
+
+        mRigidBodyComponent->SetEnabled(false);
+        mColliderComponent->SetEnabled(false);
+        mDrawComponent->SetEnabled(false);
+        mState = ActorState::Destroy;
     }
 }
 
@@ -195,17 +261,32 @@ void Mario::OnVerticalCollision(const float minOverlap, AABBColliderComponent* o
     if (other->GetLayer() == ColliderLayer::Collectable)
     {
         CollectCheese();
-        other->GetOwner()->Kill();
     }
     if (other->GetLayer() == ColliderLayer::Exit && mCollectedCheese) {
-        mGame->GetAudio()->PlaySound("Victoire.wav");
-        mGame->SetGamePlayState(Game::GamePlayState::Leaving);
+        if(GetIsLeaving()) return;
+
+        SetIsLeaving(true);
+
+        SDL_Log("%d", mGame->PlayersLeaving());
+        SDL_Log("%d", mGame->AlivePlayers());
+
+        if(mGame->PlayersLeaving() == mGame->AlivePlayers()) {
+            mGame->SetGamePlayState(Game::GamePlayState::Leaving);
+            mGame->GetAudio()->PlaySound("victory.wav");
+        }
+
+        mRigidBodyComponent->SetEnabled(false);
+        mColliderComponent->SetEnabled(false);
+        mDrawComponent->SetEnabled(false);
+        mState = ActorState::Destroy;
     }
 }
 
 void Mario::CollectCheese() {
-    mCollectedCheese = true;
-    mForwardSpeed = 600.0f;
-    mJumpSpeed = -500.0f;
-    mGame->GetAudio()->PlaySound("cheese.wav");
+    if (!mCollectedCheese){
+        mCollectedCheese = true;
+        mForwardSpeed = 600.0f;
+        mJumpSpeed = -500.0f;
+        mGame->GetAudio()->PlaySound("cheese.wav");
+    }
 }

@@ -8,7 +8,7 @@
 class Mario : public Actor
 {
 public:
-    explicit Mario(Game* game, float forwardSpeed = 1000.0f, float jumpSpeed = -600.0f);
+    explicit Mario(Game* game, float forwardSpeed = 1000.0f, float jumpSpeed = -600.0f, bool isPlayer1 = true);
 
     void OnProcessInput(const Uint8* keyState) override;
     void OnUpdate(float deltaTime) override;
@@ -26,9 +26,30 @@ public:
     void SetSpeed(float speed) {
         mForwardSpeed = speed;
     }
+    void SetIsLeaving(bool state) {
+        mIsLeaving = state;
+    }
+    bool GetIsLeaving() {
+        return mIsLeaving;
+    }
+    bool GetSpellMode() {
+        return mSpellMode;
+    }
+
+    void CastSpell(int x, int y);
+
     void CollectCheese();
     bool WasChesseCollected() {
         return mCollectedCheese;
+    }
+
+    bool PressedLeft(const uint8_t* state);
+    bool PressedRight(const uint8_t* state);
+    bool PressedUp(const uint8_t* state);
+    bool PressedDown(const uint8_t* state);
+
+    void ToggleSpellMode() {
+        mSpellMode = !mSpellMode;
     }
 
     void PerformWallJump();
@@ -51,6 +72,10 @@ private:
     int mWallJumpCooldown;
     bool mCanWallJump;
     bool mWasMovingAwayFromWall;
+    bool mIsPlayer1;
+    bool mIsLeaving;
+    bool mSpellMode;
+    int mSpellCount;
 
     class RigidBodyComponent* mRigidBodyComponent;
     class DrawAnimatedComponent* mDrawComponent;

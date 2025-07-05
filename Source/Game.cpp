@@ -22,7 +22,6 @@
 #include "Actors/Actor.h"
 #include "Actors/Mario.h"
 #include "Actors/Block.h"
-#include "Actors/Spawner.h"
 #include "Actors/Cheese.h"
 #include "Actors/Exit.h"
 #include "UIElements/UIScreen.h"
@@ -38,7 +37,8 @@ Game::Game(int windowWidth, int windowHeight)
         ,mIsRunning(true)
         ,mWindowWidth(windowWidth)
         ,mWindowHeight(windowHeight)
-        ,mMario(nullptr)
+        ,mPlayer1(nullptr)
+        ,mPlayer2(nullptr)
         ,mHUD(nullptr)
         ,mBackgroundColor(0, 0, 0)
         ,mModColor(255, 255, 255)
@@ -191,7 +191,7 @@ void Game::ChangeScene()
 //        mHUD->SetLevelName("1-1");
 
         // Set background color
-        SetBackgroundImage("../Assets/Sprites/Background.png", Vector2(0,0), Vector2(960,640));
+        SetBackgroundImage("../Assets/Sprites/background0.png", Vector2(0,0), Vector2(960,640));
 
         // Draw Flag
 //        auto flag = new Actor(this);
@@ -212,8 +212,8 @@ void Game::ChangeScene()
         mBackgroundColor.Set(0.0f, 0.0f, 0.0f);
 
         // Set mod color
-        mModColor.Set(0.0f, 255.0f, 200.0f);
-
+//        mModColor.Set(0.0f, 255.0f, 200.0f);
+        SetBackgroundImage("../Assets/Sprites/background2.png", Vector2(0,0), Vector2(960,640));
         // Create HUD
         mHUD = new HUD(this, "../Assets/Fonts/SMB.ttf");
 
@@ -272,12 +272,12 @@ void Game::BuildLevel(int** levelData, int width, int height)
 
     // Const map to convert tile ID to block type
     const std::map<int, const std::string> tileMap = {
-            {0, "../Assets/Sprites/Blocks/BlockA.png"},
+            {0, "../Assets/Sprites/Blocks/Grass.png"},
             {1, "../Assets/Sprites/Blocks/BlockC.png"},
             {2, "../Assets/Sprites/Blocks/BlockF.png"},
-            {4, "../Assets/Sprites/Blocks/BlockB.png"},
+            {4, "../Assets/Sprites/Blocks/Rock.png"},
             {6, "../Assets/Sprites/Blocks/BlockI.png"},
-            {8, "../Assets/Sprites/Blocks/BlockD.png"},
+            {8, "empty"},
             {9, "../Assets/Sprites/Blocks/BlockH.png"},
             {12, "../Assets/Sprites/Blocks/BlockG.png"},
     };
@@ -290,13 +290,10 @@ void Game::BuildLevel(int** levelData, int width, int height)
 
             if(tile == 16) // Mario
             {
-                mMario = new Mario(this);
-                mMario->SetPosition(Vector2(x * TILE_SIZE, y * TILE_SIZE));
-            }
-            else if(tile == 10) // Spawner
-            {
-                Spawner* spawner = new Spawner(this, SPAWN_DISTANCE);
-                spawner->SetPosition(Vector2(x * TILE_SIZE, y * TILE_SIZE));
+                mPlayer1 = new Mario(this);
+                mPlayer1->SetPosition(Vector2(x * TILE_SIZE, y * TILE_SIZE));
+                mPlayer2 = new Mario(this, 1000.0f, -600.0f, false);
+                mPlayer2->SetPosition(Vector2(x * TILE_SIZE, y * TILE_SIZE));
             }
             else if(tile == 3)
             {
@@ -399,10 +396,30 @@ void Game::ProcessInput()
                     TogglePause();
                 }
                 break;
+            case SDL_MOUSEBUTTONDOWN:
+                HandleSpell(event);
         }
     }
 
     ProcessInputActors();
+}
+
+void Game::HandleSpell(SDL_Event event) {
+    SDL_Log("%d", event.button.button);
+    if(event.button.button == SDL_BUTTON_LEFT) {
+        if(mPlayer1) {
+            if(mPlayer1->GetSpellMode()) {
+                mPlayer1->CastSpell(event.button.x, event.button.y);
+            }
+        }
+    }
+    if(event.button.button == SDL_BUTTON_RIGHT) {
+        if(mPlayer2) {
+            if(mPlayer2->GetSpellMode()) {
+                mPlayer2->CastSpell(event.button.x, event.button.y);
+            }
+        }
+    }
 }
 
 void Game::ProcessInputActors()
@@ -415,19 +432,24 @@ void Game::ProcessInputActors()
 
         const Uint8* state = SDL_GetKeyboardState(nullptr);
 
-        bool isMarioOnCamera = false;
+        bool arePlayersOnCamera = false;
         for (auto actor: actorsOnCamera)
         {
             actor->ProcessInput(state);
 
-            if (actor == mMario) {
-                isMarioOnCamera = true;
+            if (actor == mPlayer1 || actor == mPlayer2) {
+                arePlayersOnCamera = true;
             }
         }
 
         // If Mario is not on camera, process input for him
-        if (!isMarioOnCamera && mMario) {
-            mMario->ProcessInput(state);
+        if (!arePlayersOnCamera && (mPlayer1 || mPlayer2)) {
+            if(mPlayer1) {
+                mPlayer1->ProcessInput(state);
+            }
+            if(mPlayer2) {
+                mPlayer2->ProcessInput(state);
+            }
         }
     }
 }
@@ -441,18 +463,23 @@ void Game::HandleKeyPressActors(const int key, const bool isPressed)
                 mSpatialHashing->QueryOnCamera(mCameraPos,mWindowWidth,mWindowHeight);
 
         // Handle key press for actors
-        bool isMarioOnCamera = false;
+        bool arePlayersOnCamera = false;
         for (auto actor: actorsOnCamera) {
             actor->HandleKeyPress(key, isPressed);
 
-            if (actor == mMario) {
-                isMarioOnCamera = true;
+            if (actor == mPlayer1 && actor == mPlayer2) {
+                arePlayersOnCamera = true;
             }
         }
 
         // If Mario is not on camera, handle key press for him
-        if (!isMarioOnCamera && mMario) {
-            mMario->HandleKeyPress(key, isPressed);
+        if (!arePlayersOnCamera && (mPlayer1 || mPlayer2)) {
+            if(mPlayer1) {
+                mPlayer1->HandleKeyPress(key, isPressed);
+            }
+            if(mPlayer2) {
+                mPlayer2->HandleKeyPress(key, isPressed);
+            }
         }
     }
 
@@ -567,21 +594,38 @@ void Game::UpdateLevelTime(float deltaTime)
         {
             // Kill Mario if time limit is reached
             mHUD->SetTime(mGameTimeLimit);
-            mMario->Kill();
+            mPlayer1->Kill();
+            mPlayer2->Kill();
         }
     }
 }
 
 void Game::UpdateCamera()
 {
-    if (!mMario) return;
+    if (!mPlayer1 && !mPlayer2) return;
 
-    float horizontalCameraPos = mMario->GetPosition().x - (mWindowWidth / 2.0f);
+    float player1PosX = mPlayer1 ? mPlayer1->GetPosition().x : 0.0f;
+    float player2PosX = mPlayer2 ? mPlayer2->GetPosition().x : 0.0f;
+
+    float midpoint = (player1PosX + player2PosX) / 2.0f;
+
+    float horizontalCameraPos = midpoint - (mWindowWidth / 2.0f);
 
     float maxCameraPos = (LEVEL_WIDTH * TILE_SIZE) - mWindowWidth;
     horizontalCameraPos = Math::Clamp(horizontalCameraPos, 0.0f, maxCameraPos);
 
     mCameraPos.x = horizontalCameraPos;
+}
+
+int Game::PlayersLeaving() {
+    int count = 0;
+    if(mPlayer1) {
+        if(mPlayer1->GetIsLeaving()) count++;
+    }
+    if(mPlayer2) {
+        if(mPlayer2->GetIsLeaving()) count++;
+    }
+    return count;
 }
 
 void Game::UpdateActors(float deltaTime)
@@ -590,18 +634,23 @@ void Game::UpdateActors(float deltaTime)
     std::vector<Actor*> actorsOnCamera =
         mSpatialHashing->QueryOnCamera(mCameraPos,mWindowWidth,mWindowHeight);
 
-    bool isMarioOnCamera = false;
+    bool arePlayersOnCamera = false;
     for (auto actor : actorsOnCamera)
     {
         actor->Update(deltaTime);
-        if (actor == mMario) {
-            isMarioOnCamera = true;
+        if (actor == mPlayer1 && actor == mPlayer2) {
+            arePlayersOnCamera = true;
         }
     }
 
     // If Mario is not on camera, update him (player should always be updated)
-    if (!isMarioOnCamera && mMario) {
-         mMario->Update(deltaTime);
+    if (!arePlayersOnCamera && (mPlayer1 || mPlayer2)) {
+        if(mPlayer1) {
+            mPlayer1->Update(deltaTime);
+        }
+        if(mPlayer2) {
+            mPlayer2->Update(deltaTime);
+        }
     }
 
     for (auto actor : actorsOnCamera)
@@ -609,8 +658,11 @@ void Game::UpdateActors(float deltaTime)
         if (actor->GetState() == ActorState::Destroy)
         {
             delete actor;
-            if (actor == mMario) {
-                mMario = nullptr;
+            if (actor == mPlayer1) {
+                mPlayer1 = nullptr;
+            }
+            if (actor == mPlayer2) {
+                mPlayer2 = nullptr;
             }
         }
     }

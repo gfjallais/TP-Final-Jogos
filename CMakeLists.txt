@@ -44,8 +44,6 @@ add_executable(${PROJECT_NAME}
         Source/Actors/Block.h
         Source/Actors/Goomba.cpp
         Source/Actors/Goomba.h
-        Source/Actors/Spawner.cpp
-        Source/Actors/Spawner.h
         Source/Actors/Cheese.cpp
         Source/Actors/Cheese.h
         Source/AudioSystem.cpp

@@ -83,26 +83,25 @@ float AABBColliderComponent::DetectHorizontalCollision(RigidBodyComponent *rigid
     {
         if (collider == this || !collider->IsEnabled()) continue;
 
-//        if (ColliderIgnoreMap.at(mLayer).find(collider->GetLayer()) != ColliderIgnoreMap.at(mLayer).end())
-//        {
-//            continue;
-//        }
+        if (ColliderIgnoreMap.at(mLayer).find(collider->GetLayer()) != ColliderIgnoreMap.at(mLayer).end())
+        {
+            if(isPlayer && (collider->GetLayer() == ColliderLayer::Collectable || collider->GetLayer() == ColliderLayer::Exit)  && Intersect(*collider)) {
+                float minHorizontalOverlap = GetMinHorizontalOverlap(collider);
+                mOwner->OnHorizontalCollision(minHorizontalOverlap, collider);
+            }
+            continue;
+        }
 
         if (Intersect(*collider))
         {
             float minHorizontalOverlap = GetMinHorizontalOverlap(collider);
-            if(collider->GetLayer() != ColliderLayer::Collectable && collider->GetLayer() != ColliderLayer::Exit) {
-                ResolveHorizontalCollisions(rigidBody, minHorizontalOverlap);
-            }
+            ResolveHorizontalCollisions(rigidBody, minHorizontalOverlap);
 
             if(isPlayer) {
                 Mario* marioOwner = dynamic_cast<Mario*>(mOwner);
                 if (marioOwner && collider->GetLayer() == ColliderLayer::Blocks) {
                     marioOwner->SetIsOnWall(true);
                     marioOwner->SetWallSide(minHorizontalOverlap < 0.0f);
-                }
-                if(collider->GetLayer() == ColliderLayer::Exit && !marioOwner->WasChesseCollected()) {
-                    ResolveHorizontalCollisions(rigidBody, minHorizontalOverlap);
                 }
             }
 
@@ -120,6 +119,7 @@ float AABBColliderComponent::DetectVertialCollision(RigidBodyComponent *rigidBod
 
     // Use spatial hashing to get nearby colliders
     auto colliders = mOwner->GetGame()->GetNearbyColliders(mOwner->GetPosition());
+    bool isPlayer = mOwner->GetComponent<AABBColliderComponent>()->GetLayer() == ColliderLayer::Player;
 
     std::sort(colliders.begin(), colliders.end(), [this](AABBColliderComponent* a, AABBColliderComponent* b) {
         return Math::Abs((a->GetCenter() - GetCenter()).LengthSq() < (b->GetCenter() - GetCenter()).LengthSq());
@@ -132,6 +132,10 @@ float AABBColliderComponent::DetectVertialCollision(RigidBodyComponent *rigidBod
         // Check if the collider is in the same layer or if it should be ignored
         if (ColliderIgnoreMap.at(mLayer).find(collider->GetLayer()) != ColliderIgnoreMap.at(mLayer).end())
         {
+            if(isPlayer && (collider->GetLayer() == ColliderLayer::Collectable || collider->GetLayer() == ColliderLayer::Exit)  && Intersect(*collider)) {
+                float minHorizontalOverlap = GetMinHorizontalOverlap(collider);
+                mOwner->OnHorizontalCollision(minHorizontalOverlap, collider);
+            }
             continue; // Ignore this collider
         }
 

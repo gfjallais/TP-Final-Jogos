@@ -104,10 +104,21 @@ public:
     }
 
     // Game-specific
-    const class Mario* GetMario() { return mMario; }
+    const class Mario* GetPlayer1() { return mPlayer1; }
+    const class Mario* GetPlayer2() { return mPlayer2; }
 
     void SetGamePlayState(GamePlayState state) { mGamePlayState = state; }
     GamePlayState GetGamePlayState() const { return mGamePlayState; }
+
+    void HandleSpell(SDL_Event event);
+    int PlayersLeaving();
+
+    int AlivePlayers() {
+        int alivePlayers = 0;
+        alivePlayers += mPlayer1 ? 1 : 0;
+        alivePlayers += mPlayer2 ? 1 : 0;
+        return alivePlayers;
+    }
 
 private:
     void ProcessInput();
@@ -162,9 +173,12 @@ private:
     Vector2 mCameraPos;
 
     // Game-specific
-    class Mario *mMario;
+    class Mario *mPlayer1;
+    class Mario *mPlayer2;
     class HUD *mHUD;
     SoundHandle mMusicHandle;
+
+    int mPlayersLeaving;
 
     float mGameTimer;
     int mGameTimeLimit;

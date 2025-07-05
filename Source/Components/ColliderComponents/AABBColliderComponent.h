@@ -24,10 +24,10 @@ class AABBColliderComponent : public Component
 public:
     // Collider ignore map
     const std::map<ColliderLayer, const std::set<ColliderLayer>> ColliderIgnoreMap = {
-        {ColliderLayer::Player, {}},
+        {ColliderLayer::Player, {ColliderLayer::Player, ColliderLayer::Collectable, ColliderLayer::Exit}},
         {ColliderLayer::Enemy,  {}},
         {ColliderLayer::Blocks, {ColliderLayer::Blocks}},
-        {ColliderLayer::Collectable,  {}},
+        {ColliderLayer::Collectable,  {ColliderLayer::Player}},
         {ColliderLayer::Exit,  {}},
     };
 
