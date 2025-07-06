@@ -65,7 +65,7 @@ bool Game::Initialize()
         return false;
     }
 
-    mWindow = SDL_CreateWindow("TP4: Super Mario Bros", 0, 0, mWindowWidth, mWindowHeight, 0);
+    mWindow = SDL_CreateWindow("CheeseRun", 0, 0, mWindowWidth, mWindowHeight, 0);
     if (!mWindow)
     {
         SDL_Log("Failed to create window: %s", SDL_GetError());
@@ -288,11 +288,14 @@ void Game::BuildLevel(int** levelData, int width, int height)
         {
             int tile = levelData[y][x];
 
+            const float forwardSpeed = 1000.0f;
+            const float jumpSpeed = -555.0f;
+
             if(tile == 16) // Mario
             {
-                mPlayer1 = new Mario(this);
+                mPlayer1 = new Mario(this, forwardSpeed, jumpSpeed, true);
                 mPlayer1->SetPosition(Vector2(x * TILE_SIZE, y * TILE_SIZE));
-                mPlayer2 = new Mario(this, 1000.0f, -600.0f, false);
+                mPlayer2 = new Mario(this, forwardSpeed, jumpSpeed, false);
                 mPlayer2->SetPosition(Vector2(x * TILE_SIZE, y * TILE_SIZE));
             }
             else if(tile == 3)

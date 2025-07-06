@@ -47,6 +47,7 @@ public:
     Vector2 GetMax() const;
     Vector2 GetCenter() const;
     ColliderLayer GetLayer() const { return mLayer; }
+    int GetHeight() const { return mHeight; }
 
 private:
     float GetMinVerticalOverlap(AABBColliderComponent* b) const;

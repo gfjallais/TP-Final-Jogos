@@ -52,11 +52,18 @@ void DrawAnimatedComponent::Draw(SDL_Renderer* renderer, const Vector3 &modColor
     int spriteIdx = mAnimations[mAnimName][static_cast<int>(mAnimTimer)];
     SDL_Rect* srcRect = mSpriteSheetData[spriteIdx];
 
+    int colliderHeight = srcRect->h;
+    auto collider = mOwner->GetComponent<AABBColliderComponent>();
+    if (collider) {
+        colliderHeight = collider->GetHeight();
+    }
+    int yOffset = srcRect->h - colliderHeight;
+
     SDL_Rect dstRect = {
-            static_cast<int>(mOwner->GetPosition().x - mOwner->GetGame()->GetCameraPos().x),
-            static_cast<int>(mOwner->GetPosition().y - mOwner->GetGame()->GetCameraPos().y),
-            srcRect->w,
-            srcRect->h
+        static_cast<int>(mOwner->GetPosition().x - mOwner->GetGame()->GetCameraPos().x),
+        static_cast<int>(mOwner->GetPosition().y - mOwner->GetGame()->GetCameraPos().y) - yOffset,
+        srcRect->w,
+        srcRect->h
     };
 
     SDL_RendererFlip flip = SDL_FLIP_NONE;

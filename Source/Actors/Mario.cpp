@@ -20,7 +20,7 @@ Mario::Mario(Game* game, const float forwardSpeed, const float jumpSpeed, const 
         , mSpellMode(false)
         , mSpellCount(2)
 {
-    mRigidBodyComponent = new RigidBodyComponent(this, 1.0f, 5.0f);
+    mRigidBodyComponent = new RigidBodyComponent(this, 1.5f, 5.0f);
     mColliderComponent = new AABBColliderComponent(this, 0, 0, Game::TILE_SIZE - 4.0f,Game::TILE_SIZE,
                                                    ColliderLayer::Player);
     std::string player1Sprite = "../Assets/Sprites/Mouse/Mouse1.png";
@@ -35,6 +35,7 @@ Mario::Mario(Game* game, const float forwardSpeed, const float jumpSpeed, const 
     mDrawComponent->AddAnimation("jump", {2});
     mDrawComponent->AddAnimation("run", {3, 4, 5, 6, 7});
     mDrawComponent->AddAnimation("win", {8});
+    mDrawComponent->AddAnimation("wizard", {9});
 
     mDrawComponent->SetAnimation("idle");
     mDrawComponent->SetAnimFPS(10.0f);
@@ -92,6 +93,7 @@ void Mario::OnProcessInput(const uint8_t* state)
     if ((state[SDL_SCANCODE_X] && mIsPlayer1) || (state[SDL_SCANCODE_M] && !mIsPlayer1)) {
         if(mSpellCount > 0) {
             ToggleSpellMode();
+            ChangeToWizardSprite(mSpellMode);
             SDL_Log("Toggled spellMode %d", mSpellMode);
         }
     }
@@ -110,6 +112,7 @@ void Mario::CastSpell(int x, int y) {
         block->SetPosition(Vector2(x, y));
         mSpellCount--;
         ToggleSpellMode();
+        ChangeToWizardSprite(mSpellMode);
     }
 }
 
@@ -118,13 +121,13 @@ void Mario::OnHandleKeyPress(const int key, const bool isPressed)
     if(mGame->GetGamePlayState() != Game::GamePlayState::Playing) return;
 
     // Jump
-    if (((key == SDLK_w && mIsPlayer1) || (key == SDLK_UP && !mIsPlayer1)) && isPressed && (mIsOnGround || (mCanWallJump && !mIsOnWall)))
+    if (((key == SDLK_w && mIsPlayer1) || (key == SDLK_UP && !mIsPlayer1)) && isPressed && (mIsOnGround || (mCanWallJump && !mIsOnWall)) && !mSpellMode)
     {
         mRigidBodyComponent->SetVelocity(Vector2(mRigidBodyComponent->GetVelocity().x, mJumpSpeed));
         mCanWallJump = false;
         mWallJumpCooldown = 0;
         mIsOnGround = false;
-        SetSpeed(700.0f);
+        // SetSpeed(2000.0f);
 
         // Play jump sound
 //        mGame->GetAudio()->PlaySound("Jump.wav");
@@ -133,7 +136,7 @@ void Mario::OnHandleKeyPress(const int key, const bool isPressed)
 
 void Mario::OnUpdate(float deltaTime)
 {
-    SetSpeed(1000.0f);
+    // SetSpeed(1000.0f);
     if (mRigidBodyComponent && mRigidBodyComponent->GetVelocity().y != 0) {
         mIsOnGround = false;
     }
@@ -171,6 +174,9 @@ void Mario::ManageAnimations()
     if(mIsDying)
     {
         mDrawComponent->SetAnimation("Dead");
+    }
+    else if(mSpellMode) {
+        mDrawComponent->SetAnimation("wizard");
     }
     else if (mIsOnGround && mIsRunning)
     {
@@ -287,11 +293,37 @@ void Mario::OnVerticalCollision(const float minOverlap, AABBColliderComponent* o
 void Mario::CollectCheese() {
     if (!mCollectedCheese){
         mCollectedCheese = true;
-        mForwardSpeed = 600.0f;
-        mJumpSpeed = -500.0f;
+        mForwardSpeed = 800.0f;
+        mJumpSpeed = -525.0f;
         mGame->GetAudio()->PlaySound("cheese.wav");
         // Change sprite sheet to cheese version
         std::string cheeseSprite = mIsPlayer1 ? "../Assets/Sprites/Mouse/Mouse1_cheese.png" : "../Assets/Sprites/Mouse/Mouse2_cheese.png";
         mDrawComponent->ChangeSpriteSheet(cheeseSprite, "../Assets/Sprites/Mouse/Mouse.json");
+    }
+}
+
+void Mario::ChangeToWizardSprite(bool toWizard) {
+    std::string spritePath;
+    if (toWizard) {
+        if (mIsPlayer1) {
+            spritePath = mCollectedCheese ? "../Assets/Sprites/Mouse/Mouse1_cheese_wizard.png" : "../Assets/Sprites/Mouse/Mouse1_wizard.png";
+        } else {
+            spritePath = mCollectedCheese ? "../Assets/Sprites/Mouse/Mouse2_cheese_wizard.png" : "../Assets/Sprites/Mouse/Mouse2_wizard.png";
+        }
+    } else {
+        if (mIsPlayer1) {
+            spritePath = mCollectedCheese ? "../Assets/Sprites/Mouse/Mouse1_cheese.png" : "../Assets/Sprites/Mouse/Mouse1.png";
+        } else {
+            spritePath = mCollectedCheese ? "../Assets/Sprites/Mouse/Mouse2_cheese.png" : "../Assets/Sprites/Mouse/Mouse2.png";
+        }
+    }
+    mDrawComponent->ChangeSpriteSheet(spritePath, "../Assets/Sprites/Mouse/Mouse.json");
+
+    if(mSpellMode) {
+        mDrawComponent->SetAnimation("wizard");
+        SDL_Log("Wizard mode");
+    } else {
+        mDrawComponent->SetAnimation("idle");
+        SDL_Log("Idle mode");
     }
 }

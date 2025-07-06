@@ -59,6 +59,8 @@ public:
     void Kill() override;
     void Win();
 
+    void ChangeToWizardSprite(bool toWizard);
+
 private:
     void ManageAnimations();
 
