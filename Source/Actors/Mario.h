@@ -4,6 +4,7 @@
 
 #pragma once
 #include "Actor.h"
+#include <SDL.h>
 
 class Mario : public Actor
 {
@@ -48,9 +49,7 @@ public:
     bool PressedUp(const uint8_t* state);
     bool PressedDown(const uint8_t* state);
 
-    void ToggleSpellMode() {
-        mSpellMode = !mSpellMode;
-    }
+    void ToggleSpellMode();
 
     void PerformWallJump();
 
@@ -60,6 +59,9 @@ public:
     void Win();
 
     void ChangeToWizardSprite(bool toWizard);
+
+    void UpdateBlockPreview(int mouseX, int mouseY);
+    void DrawBlockPreview(SDL_Renderer* renderer);
 
 private:
     void ManageAnimations();
@@ -82,4 +84,7 @@ private:
     class RigidBodyComponent* mRigidBodyComponent;
     class DrawAnimatedComponent* mDrawComponent;
     class AABBColliderComponent* mColliderComponent;
+
+    Vector2 mBlockPreviewPos;
+    bool mShowBlockPreview = false;
 };

@@ -53,6 +53,7 @@ Game::Game(int windowWidth, int windowHeight)
         ,mBackgroundTexture(nullptr)
         ,mBackgroundSize(Vector2::Zero)
         ,mBackgroundPosition(Vector2::Zero)
+        ,mIsTwoPlayerMode(false)
 {
     mGameSceneSequence = {GameScene::MainMenu, GameScene::Level1, GameScene::Level2};
 }
@@ -240,17 +241,20 @@ void Game::LoadMainMenu()
 
     const Vector2 titleSize = Vector2(176.0f, 176.0f) * 2.0f;
     const Vector2 titlePos = Vector2(mWindowWidth/2.0f - titleSize.x/2.0f, 50.0f);
-    mainMenu->AddImage("../Assets/Sprites/Logo.png", titlePos, titleSize);
+    mainMenu->AddImage("../Assets/Sprites/Collactables/Cheese.png", titlePos, titleSize);
 
     const Vector2 buttonSize = Vector2(200.0f, 40.0f);
     const Vector2 button1Pos = Vector2(mWindowWidth/2.0f - buttonSize.x/2.0f, titlePos.y + titleSize.y + 30.0f);
     const Vector2 button2Pos = Vector2(mWindowWidth/2.0f - buttonSize.x/2.0f, button1Pos.y + buttonSize.y + 5.0f);
 
-    mainMenu->AddButton("Jogar", button1Pos, buttonSize, [this]() {
+    mainMenu->AddButton("Single Player", button1Pos, buttonSize, [this]() {
+        mIsTwoPlayerMode = false;
         SetGameScene(GameScene::Level1);
     });
-
-    // mainMenu->AddButton("2 Players", button2Pos, buttonSize, nullptr);
+    mainMenu->AddButton("Two Players", button2Pos, buttonSize, [this]() {
+        mIsTwoPlayerMode = true;
+        SetGameScene(GameScene::Level1);
+    });
 }
 
 void Game::LoadLevel(const std::string& levelName, const int levelWidth, const int levelHeight)
@@ -295,8 +299,12 @@ void Game::BuildLevel(int** levelData, int width, int height)
             {
                 mPlayer1 = new Mario(this, forwardSpeed, jumpSpeed, true);
                 mPlayer1->SetPosition(Vector2(x * TILE_SIZE, y * TILE_SIZE));
-                mPlayer2 = new Mario(this, forwardSpeed, jumpSpeed, false);
-                mPlayer2->SetPosition(Vector2(x * TILE_SIZE, y * TILE_SIZE));
+                if (mIsTwoPlayerMode) {
+                    mPlayer2 = new Mario(this, forwardSpeed, jumpSpeed, false);
+                    mPlayer2->SetPosition(Vector2(x * TILE_SIZE, y * TILE_SIZE));
+                } else {
+                    mPlayer2 = nullptr;
+                }
             }
             else if(tile == 3)
             {
@@ -397,6 +405,14 @@ void Game::ProcessInput()
                 if (event.key.keysym.sym == SDLK_RETURN)
                 {
                     TogglePause();
+                }
+                break;
+            case SDL_MOUSEMOTION:
+                if (mPlayer1 && mPlayer1->GetSpellMode()) {
+                    mPlayer1->UpdateBlockPreview(event.motion.x, event.motion.y);
+                }
+                if (mPlayer2 && mPlayer2->GetSpellMode()) {
+                    mPlayer2->UpdateBlockPreview(event.motion.x, event.motion.y);
                 }
                 break;
             case SDL_MOUSEBUTTONDOWN:
@@ -584,23 +600,23 @@ void Game::UpdateSceneManager(float deltaTime)
 void Game::UpdateLevelTime(float deltaTime)
 {
     // Reinsert game timer
-    mGameTimer += deltaTime;
-    if (mGameTimer >= 0.5f)
-    {
-        mGameTimer = 0.0f;
-        mGameTimeLimit--;
+    // mGameTimer += deltaTime;
+    // if (mGameTimer >= 0.5f)
+    // {
+    //     mGameTimer = 0.0f;
+    //     mGameTimeLimit--;
 
-        if (mGameTimeLimit > 0) {
-            mHUD->SetTime(mGameTimeLimit);
-        }
-        else
-        {
-            // Kill Mario if time limit is reached
-            mHUD->SetTime(mGameTimeLimit);
-            mPlayer1->Kill();
-            mPlayer2->Kill();
-        }
-    }
+    //     if (mGameTimeLimit > 0) {
+    //         mHUD->SetTime(mGameTimeLimit);
+    //     }
+    //     else
+    //     {
+    //         // Kill Mario if time limit is reached
+    //         mHUD->SetTime(mGameTimeLimit);
+    //         mPlayer1->Kill();
+    //         mPlayer2->Kill();
+    //     }
+    // }
 }
 
 void Game::UpdateCamera()
@@ -741,6 +757,9 @@ void Game::GenerateOutput()
     {
         drawable->Draw(mRenderer, mModColor);
     }
+
+    if (mPlayer1) mPlayer1->DrawBlockPreview(mRenderer);
+    if (mPlayer2) mPlayer2->DrawBlockPreview(mRenderer);
 
     // Draw all UI screens
     for (auto ui :mUIStack)

@@ -104,12 +104,19 @@ void Mario::OnProcessInput(const uint8_t* state)
     }
 }
 
+void Mario::ToggleSpellMode() {
+    mSpellMode = !mSpellMode;
+    if (!mSpellMode) {
+        mShowBlockPreview = false;
+    }
+}
+
 void Mario::CastSpell(int x, int y) {
     SDL_Log("Cast Spell Called");
     SDL_Log("%d", mSpellCount);
     if(mSpellCount > 0) {
         Block* block = new Block(mGame, "../Assets/Sprites/Blocks/rock.png", false);
-        block->SetPosition(Vector2(x, y));
+        block->SetPosition(mBlockPreviewPos);
         mSpellCount--;
         ToggleSpellMode();
         ChangeToWizardSprite(mSpellMode);
@@ -296,7 +303,7 @@ void Mario::CollectCheese() {
         mForwardSpeed = 800.0f;
         mJumpSpeed = -525.0f;
         mGame->GetAudio()->PlaySound("cheese.wav");
-        // Change sprite sheet to cheese version
+
         std::string cheeseSprite = mIsPlayer1 ? "../Assets/Sprites/Mouse/Mouse1_cheese.png" : "../Assets/Sprites/Mouse/Mouse2_cheese.png";
         mDrawComponent->ChangeSpriteSheet(cheeseSprite, "../Assets/Sprites/Mouse/Mouse.json");
     }
@@ -326,4 +333,30 @@ void Mario::ChangeToWizardSprite(bool toWizard) {
         mDrawComponent->SetAnimation("idle");
         SDL_Log("Idle mode");
     }
+}
+
+void Mario::UpdateBlockPreview(int mouseX, int mouseY) {
+    if (!mSpellMode) {
+        mShowBlockPreview = false;
+        return;
+    }
+    int gridX = (mouseX / Game::TILE_SIZE) * Game::TILE_SIZE;
+    int gridY = (mouseY / Game::TILE_SIZE) * Game::TILE_SIZE;
+    mBlockPreviewPos = Vector2(gridX, gridY);
+    mShowBlockPreview = true;
+}
+
+void Mario::DrawBlockPreview(SDL_Renderer* renderer) {
+    if (!mShowBlockPreview) return;
+    SDL_Texture* previewTexture = mGame->LoadTexture("../Assets/Sprites/Blocks/rock.png");
+    SDL_Rect dstRect = {
+        static_cast<int>(mBlockPreviewPos.x - mGame->GetCameraPos().x),
+        static_cast<int>(mBlockPreviewPos.y - mGame->GetCameraPos().y),
+        Game::TILE_SIZE,
+        Game::TILE_SIZE
+    };
+    SDL_SetTextureAlphaMod(previewTexture, 128); // 50% transparent
+    SDL_RenderCopy(renderer, previewTexture, nullptr, &dstRect);
+    SDL_SetTextureAlphaMod(previewTexture, 255); // Reset alpha
+    SDL_DestroyTexture(previewTexture);
 }
