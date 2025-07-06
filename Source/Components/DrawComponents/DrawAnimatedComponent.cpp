@@ -98,3 +98,14 @@ void DrawAnimatedComponent::AddAnimation(const std::string& name, const std::vec
     mAnimations.emplace(name, spriteNums);
 }
 
+void DrawAnimatedComponent::ChangeSpriteSheet(const std::string& spriteSheetPath, const std::string& spriteSheetData)
+{
+    for (const auto& rect : mSpriteSheetData)
+    {
+        delete rect;
+    }
+    mSpriteSheetData.clear();
+
+    LoadSpriteSheet(spriteSheetPath, spriteSheetData);
+}
+

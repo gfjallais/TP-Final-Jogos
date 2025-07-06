@@ -23,16 +23,18 @@ Mario::Mario(Game* game, const float forwardSpeed, const float jumpSpeed, const 
     mRigidBodyComponent = new RigidBodyComponent(this, 1.0f, 5.0f);
     mColliderComponent = new AABBColliderComponent(this, 0, 0, Game::TILE_SIZE - 4.0f,Game::TILE_SIZE,
                                                    ColliderLayer::Player);
+    std::string player1Sprite = "../Assets/Sprites/Mouse/Mouse1.png";
+    std::string player2Sprite = "../Assets/Sprites/Mouse/Mouse2.png";
 
     mDrawComponent = new DrawAnimatedComponent(this,
-                                              "../Assets/Sprites/Mario/Mario.png",
-                                              "../Assets/Sprites/Mario/Mario.json");
+                                              isPlayer1 ? player1Sprite : player2Sprite,
+                                              "../Assets/Sprites/Mouse/Mouse.json");
 
     mDrawComponent->AddAnimation("Dead", {0});
     mDrawComponent->AddAnimation("idle", {1});
     mDrawComponent->AddAnimation("jump", {2});
-    mDrawComponent->AddAnimation("run", {3, 4, 5});
-    mDrawComponent->AddAnimation("win", {7});
+    mDrawComponent->AddAnimation("run", {3, 4, 5, 6, 7});
+    mDrawComponent->AddAnimation("win", {8});
 
     mDrawComponent->SetAnimation("idle");
     mDrawComponent->SetAnimFPS(10.0f);
@@ -288,5 +290,8 @@ void Mario::CollectCheese() {
         mForwardSpeed = 600.0f;
         mJumpSpeed = -500.0f;
         mGame->GetAudio()->PlaySound("cheese.wav");
+        // Change sprite sheet to cheese version
+        std::string cheeseSprite = mIsPlayer1 ? "../Assets/Sprites/Mouse/Mouse1_cheese.png" : "../Assets/Sprites/Mouse/Mouse2_cheese.png";
+        mDrawComponent->ChangeSpriteSheet(cheeseSprite, "../Assets/Sprites/Mouse/Mouse.json");
     }
 }

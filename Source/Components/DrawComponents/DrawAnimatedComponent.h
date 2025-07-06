@@ -28,6 +28,9 @@ public:
     // Add an animation of the corresponding name to the animation map
     void AddAnimation(const std::string& name, const std::vector<int>& images);
 
+    // Add this method to allow changing the sprite sheet at runtime
+    void ChangeSpriteSheet(const std::string& spriteSheetPath, const std::string& spriteSheetData);
+
 private:
     void LoadSpriteSheet(const std::string& texturePath, const std::string& dataPath);
 
