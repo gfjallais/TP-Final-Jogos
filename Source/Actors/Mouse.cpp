@@ -2,14 +2,14 @@
 // Created by Lucas N. Ferreira on 03/08/23.
 //
 
-#include "Mario.h"
+#include "Mouse.h"
 #include "Block.h"
 #include "../Game.h"
 #include "../Components/DrawComponents/DrawAnimatedComponent.h"
 #include "../Components/DrawComponents/DrawPolygonComponent.h"
 #include <algorithm>
 
-Mario::Mario(Game* game, const float forwardSpeed, const float jumpSpeed, const bool isPlayer1)
+Mouse::Mouse(Game* game, const float forwardSpeed, const float jumpSpeed, const bool isPlayer1)
         : Actor(game)
         , mIsRunning(false)
         , mIsDying(false)
@@ -43,35 +43,35 @@ Mario::Mario(Game* game, const float forwardSpeed, const float jumpSpeed, const 
     mCollectedCheese = false;
 }
 
-bool Mario::PressedLeft(const uint8_t* state) {
+bool Mouse::PressedLeft(const uint8_t* state) {
     if(mIsPlayer1) {
         return state[SDL_SCANCODE_A];
     }
     return state[SDL_SCANCODE_LEFT];
 }
 
-bool Mario::PressedRight(const uint8_t* state) {
+bool Mouse::PressedRight(const uint8_t* state) {
     if(mIsPlayer1) {
         return state[SDL_SCANCODE_D];
     }
     return state[SDL_SCANCODE_RIGHT];
 }
 
-bool Mario::PressedUp(const uint8_t* state) {
+bool Mouse::PressedUp(const uint8_t* state) {
     if(mIsPlayer1) {
         return state[SDL_SCANCODE_W];
     }
     return state[SDL_SCANCODE_UP];
 }
 
-bool Mario::PressedDown(const uint8_t* state) {
+bool Mouse::PressedDown(const uint8_t* state) {
     if(mIsPlayer1) {
         return state[SDL_SCANCODE_S];
     }
     return state[SDL_SCANCODE_DOWN];
 }
 
-void Mario::OnProcessInput(const uint8_t* state)
+void Mouse::OnProcessInput(const uint8_t* state)
 {
     if(mGame->GetGamePlayState() != Game::GamePlayState::Playing) return;
     if(mSpellMode) return;
@@ -104,14 +104,14 @@ void Mario::OnProcessInput(const uint8_t* state)
     }
 }
 
-void Mario::ToggleSpellMode() {
+void Mouse::ToggleSpellMode() {
     mSpellMode = !mSpellMode;
     if (!mSpellMode) {
         mShowBlockPreview = false;
     }
 }
 
-void Mario::CastSpell(int x, int y) {
+void Mouse::CastSpell(int x, int y) {
     SDL_Log("Cast Spell Called");
     SDL_Log("%d", mSpellCount);
     if(mSpellCount > 0) {
@@ -123,7 +123,7 @@ void Mario::CastSpell(int x, int y) {
     }
 }
 
-void Mario::OnHandleKeyPress(const int key, const bool isPressed)
+void Mouse::OnHandleKeyPress(const int key, const bool isPressed)
 {
     if(mGame->GetGamePlayState() != Game::GamePlayState::Playing) return;
 
@@ -141,7 +141,7 @@ void Mario::OnHandleKeyPress(const int key, const bool isPressed)
     }
 }
 
-void Mario::OnUpdate(float deltaTime)
+  void Mouse::OnUpdate(float deltaTime)
 {
     // SetSpeed(1000.0f);
     if (mRigidBodyComponent && mRigidBodyComponent->GetVelocity().y != 0) {
@@ -181,7 +181,7 @@ void Mario::OnUpdate(float deltaTime)
     ManageAnimations();
 }
 
-void Mario::ManageAnimations()
+void Mouse::ManageAnimations()
 {
     if(mIsDying)
     {
@@ -204,7 +204,7 @@ void Mario::ManageAnimations()
     }
 }
 
-void Mario::Kill()
+void Mouse::Kill()
 {
     mIsDying = true;
     if(mGame->AlivePlayers() == 1) {
@@ -221,11 +221,11 @@ void Mario::Kill()
     mGame->ResetGameScene(3.5f); // Reset the game scene after 3 seconds
 }
 
-void Mario::Win()
+void Mouse::Win()
 {
 }
 
-void Mario::OnHorizontalCollision(const float minOverlap, AABBColliderComponent* other)
+void Mouse::OnHorizontalCollision(const float minOverlap, AABBColliderComponent* other)
 {
     if (other->GetLayer() == ColliderLayer::Enemy)
     {
@@ -259,7 +259,7 @@ void Mario::OnHorizontalCollision(const float minOverlap, AABBColliderComponent*
     }
 }
 
-void Mario::OnVerticalCollision(const float minOverlap, AABBColliderComponent* other)
+void Mouse::OnVerticalCollision(const float minOverlap, AABBColliderComponent* other)
 {
     if (other->GetLayer() == ColliderLayer::Enemy)
     {
@@ -302,7 +302,7 @@ void Mario::OnVerticalCollision(const float minOverlap, AABBColliderComponent* o
     }
 }
 
-void Mario::CollectCheese() {
+void Mouse::CollectCheese() {
     if (!mCollectedCheese){
         mCollectedCheese = true;
         mForwardSpeed = 800.0f;
@@ -314,7 +314,7 @@ void Mario::CollectCheese() {
     }
 }
 
-void Mario::ChangeToWizardSprite(bool toWizard) {
+void Mouse::ChangeToWizardSprite(bool toWizard) {
     std::string spritePath;
     if (toWizard) {
         if (mIsPlayer1) {
@@ -340,7 +340,7 @@ void Mario::ChangeToWizardSprite(bool toWizard) {
     }
 }
 
-void Mario::UpdateBlockPreview(int mouseX, int mouseY) {
+void Mouse::UpdateBlockPreview(int mouseX, int mouseY) {
     if (!mSpellMode) {
         mShowBlockPreview = false;
         return;
@@ -351,7 +351,7 @@ void Mario::UpdateBlockPreview(int mouseX, int mouseY) {
     mShowBlockPreview = true;
 }
 
-void Mario::DrawBlockPreview(SDL_Renderer* renderer) {
+void Mouse::DrawBlockPreview(SDL_Renderer* renderer) {
     if (!mShowBlockPreview) return;
     SDL_Texture* previewTexture = mGame->LoadTexture("../Assets/Sprites/Blocks/rock.png");
     SDL_Rect dstRect = {

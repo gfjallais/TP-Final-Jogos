@@ -106,8 +106,8 @@ public:
     }
 
     // Game-specific
-    const class Mario* GetPlayer1() { return mPlayer1; }
-    const class Mario* GetPlayer2() { return mPlayer2; }
+    const class Mouse* GetPlayer1() { return mPlayer1; }
+    const class Mouse* GetPlayer2() { return mPlayer2; }
 
     void SetGamePlayState(GamePlayState state) { mGamePlayState = state; }
     GamePlayState GetGamePlayState() const { return mGamePlayState; }
@@ -175,8 +175,8 @@ private:
     Vector2 mCameraPos;
 
     // Game-specific
-    class Mario *mPlayer1;
-    class Mario *mPlayer2;
+    class Mouse *mPlayer1;
+    class Mouse *mPlayer2;
     class HUD *mHUD;
     SoundHandle mMusicHandle;
 

@@ -6,10 +6,10 @@
 #include "Actor.h"
 #include <SDL.h>
 
-class Mario : public Actor
+class Mouse : public Actor
 {
 public:
-    explicit Mario(Game* game, float forwardSpeed = 1000.0f, float jumpSpeed = -600.0f, bool isPlayer1 = true);
+    explicit Mouse(Game* game, float forwardSpeed = 1000.0f, float jumpSpeed = -600.0f, bool isPlayer1 = true);
 
     void OnProcessInput(const Uint8* keyState) override;
     void OnUpdate(float deltaTime) override;

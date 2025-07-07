@@ -20,7 +20,7 @@
 #include "HUD.h"
 #include "SpatialHashing.h"
 #include "Actors/Actor.h"
-#include "Actors/Mario.h"
+#include "Actors/Mouse.h"
 #include "Actors/Block.h"
 #include "Actors/Cheese.h"
 #include "Actors/Exit.h"
@@ -263,8 +263,8 @@ void Game::LoadMainMenu()
 
     mainMenu->AddButton("Single Player", button1Pos, buttonSize, [this]() {
         mIsTwoPlayerMode = false;
-        // SetGameScene(GameScene::Intro);
-        SetGameScene(GameScene::Level1);
+        SetGameScene(GameScene::Intro);
+        // SetGameScene(GameScene::Level1);
     });
     mainMenu->AddButton("Two Players", button2Pos, buttonSize, [this]() {
         mIsTwoPlayerMode = true;
@@ -312,10 +312,10 @@ void Game::BuildLevel(int** levelData, int width, int height)
 
             if(tile == 16)
             {
-                mPlayer1 = new Mario(this, forwardSpeed, jumpSpeed, true);
+                mPlayer1 = new Mouse(this, forwardSpeed, jumpSpeed, true);
                 mPlayer1->SetPosition(Vector2(x * TILE_SIZE, y * TILE_SIZE));
                 if (mIsTwoPlayerMode) {
-                    mPlayer2 = new Mario(this, forwardSpeed, jumpSpeed, false);
+                    mPlayer2 = new Mouse(this, forwardSpeed, jumpSpeed, false);
                     mPlayer2->SetPosition(Vector2(x * TILE_SIZE, y * TILE_SIZE));
                 } else {
                     mPlayer2 = nullptr;

@@ -4,7 +4,7 @@
 
 #include "AABBColliderComponent.h"
 #include "../../Actors/Actor.h"
-#include "../../Actors/Mario.h"
+#include "../../Actors/Mouse.h"
 #include "../../Game.h"
 #include <algorithm>
 
@@ -71,7 +71,7 @@ float AABBColliderComponent::DetectHorizontalCollision(RigidBodyComponent *rigid
     bool isPlayer = mOwner->GetComponent<AABBColliderComponent>()->GetLayer() == ColliderLayer::Player;
 
     if(isPlayer) {
-        Mario* marioOwner = dynamic_cast<Mario*>(mOwner);
+        Mouse* marioOwner = dynamic_cast<Mouse*>(mOwner);
         marioOwner->SetIsOnWall(false);
     }
 
@@ -98,7 +98,7 @@ float AABBColliderComponent::DetectHorizontalCollision(RigidBodyComponent *rigid
             ResolveHorizontalCollisions(rigidBody, minHorizontalOverlap);
 
             if(isPlayer) {
-                Mario* marioOwner = dynamic_cast<Mario*>(mOwner);
+                Mouse* marioOwner = dynamic_cast<Mouse*>(mOwner);
                 if (marioOwner && collider->GetLayer() == ColliderLayer::Blocks) {
                     marioOwner->SetIsOnWall(true);
                     marioOwner->SetWallSide(minHorizontalOverlap < 0.0f);
