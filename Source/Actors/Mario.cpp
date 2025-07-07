@@ -155,10 +155,8 @@ void Mario::OnUpdate(float deltaTime)
         mCanWallJump = false;
     }
 
-    // Limit Mario's position to the camera view
     mPosition.x = Math::Max(mPosition.x, mGame->GetCameraPos().x);
 
-    // Kill mario if he falls below the screen
     if (mGame->GetGamePlayState() == Game::GamePlayState::Playing && mPosition.y > mGame->GetWindowHeight()) {
         Kill();
     }
@@ -168,8 +166,15 @@ void Mario::OnUpdate(float deltaTime)
     {
         mState = ActorState::Destroy;
         auto gameScene = mGame->GetGameSceneSequence();
-        auto it = (std::find(gameScene.begin(), gameScene.end(), mGame->GetGameScene()) - gameScene.begin() + 1) % gameScene.size();
-        mGame->SetGameScene(gameScene[it]);
+        auto currentIt = std::find(gameScene.begin(), gameScene.end(), mGame->GetGameScene());
+        if (currentIt != gameScene.end()) {
+            auto nextIt = currentIt + 1;
+            if (nextIt != gameScene.end()) {
+                mGame->SetGameScene(*nextIt);
+            } else {
+                mGame->SetGameScene(Game::GameScene::MainMenu);
+            }
+        }
         return;
     }
 
