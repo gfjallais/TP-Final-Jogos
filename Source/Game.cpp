@@ -54,6 +54,7 @@ Game::Game(int windowWidth, int windowHeight)
         ,mBackgroundSize(Vector2::Zero)
         ,mBackgroundPosition(Vector2::Zero)
         ,mIsTwoPlayerMode(false)
+        ,mIntroTimer(0.0f)
 {
     mGameSceneSequence = {GameScene::MainMenu, GameScene::Level1, GameScene::Level2};
 }
@@ -122,7 +123,7 @@ void Game::SetGameScene(Game::GameScene scene, float transitionTime)
     // Scene Manager FSM: using if/else instead of switch
     if (mSceneManagerState == SceneManagerState::None)
     {
-        if (scene == GameScene::MainMenu || scene == GameScene::Level1 || scene == GameScene::Level2)
+        if (scene == GameScene::MainMenu || scene == GameScene::Intro || scene == GameScene::Level1 || scene == GameScene::Level2)
         {
             mNextScene = scene;
             mSceneManagerState = SceneManagerState::Entering;
@@ -166,14 +167,16 @@ void Game::ChangeScene()
     if (mNextScene == GameScene::MainMenu)
     {
         mAudio->StopAllSounds();
-        // Set background color
         mBackgroundColor.Set(107.0f, 140.0f, 255.0f);
-
-        // Set background color
         SetBackgroundImage("../Assets/Sprites/Background.png", Vector2(0,0), Vector2(960,640));
-
-        // Initialize main menu actors
         LoadMainMenu();
+    }
+    else if (mNextScene == GameScene::Intro)
+    {
+        mAudio->StopAllSounds();
+        mBackgroundColor.Set(0.0f, 0.0f, 0.0f);
+        LoadIntroScreen();
+        mIntroTimer = 10.0f;
     }
     else if (mNextScene == GameScene::Level1)
     {
@@ -184,11 +187,10 @@ void Game::ChangeScene()
         mBackgroundColor.Set(107.0f, 140.0f, 255.0f);
 
         // Create HUD
-        mHUD = new HUD(this, "../Assets/Fonts/SMB.ttf");
+        mHUD = new HUD(this, "../Assets/Fonts/SB.ttf");
 
         // Reset HUD
         mGameTimeLimit = 400;
-        mHUD->SetTime(mGameTimeLimit);
 //        mHUD->SetLevelName("1-1");
 
         // Set background color
@@ -216,11 +218,10 @@ void Game::ChangeScene()
 //        mModColor.Set(0.0f, 255.0f, 200.0f);
         SetBackgroundImage("../Assets/Sprites/background2.png", Vector2(0,0), Vector2(960,640));
         // Create HUD
-        mHUD = new HUD(this, "../Assets/Fonts/SMB.ttf");
+        mHUD = new HUD(this, "../Assets/Fonts/SB.ttf");
 
         // Reset HUD
         mGameTimeLimit = 400;
-        mHUD->SetTime(mGameTimeLimit);
 //        mHUD->SetLevelName("1-2");
 
         // Initialize actors
@@ -231,30 +232,53 @@ void Game::ChangeScene()
     mGameScene = mNextScene;
 }
 
+void Game::LoadIntroScreen()
+{
+    UIScreen* introScreen = new UIScreen(this, "../Assets/Fonts/COR.ttf");
+    const std::string introText =
+        "O queijo foi roubado!\n"
+        "Só os ratos mais valentes podem recuperá-lo.\n"
+        "Divirta-se nessa aventura!";
+    const Vector2 textSize = Vector2(800, 200);
+    const Vector2 textPos = Vector2(mWindowWidth/2.0f - textSize.x/2.0f, mWindowHeight/2.0f - textSize.y/2.0f);
+    introScreen->AddText(introText, textPos, textSize, 48);
+}
+
 void Game::LoadMainMenu()
 {
-    UIScreen* mainMenu = new UIScreen(this, "../Assets/Fonts/SMB.ttf");
+    UIScreen* mainMenu = new UIScreen(this, "../Assets/Fonts/SB.ttf");
 
     const Vector2 bgImgSize = Vector2(mWindowWidth, mWindowHeight);
     const Vector2 bgPos = Vector2(0, 0);
     mainMenu->AddImage("../Assets/Sprites/BackgroundMainMenu.png", bgPos, bgImgSize);
 
-    const Vector2 titleSize = Vector2(176.0f, 176.0f) * 2.0f;
-    const Vector2 titlePos = Vector2(mWindowWidth/2.0f - titleSize.x/2.0f, 50.0f);
-    mainMenu->AddImage("../Assets/Sprites/Collactables/Cheese.png", titlePos, titleSize);
+    const std::string gameTitle = "Cheese Run!";
+    const Vector2 titleSize = Vector2(600.0f, 100.0f);
+    const Vector2 titlePos = Vector2(mWindowWidth/2.0f - titleSize.x/2.0f, 40.0f);
+    mainMenu->AddText(gameTitle, titlePos, titleSize, 72);
 
-    const Vector2 buttonSize = Vector2(200.0f, 40.0f);
-    const Vector2 button1Pos = Vector2(mWindowWidth/2.0f - buttonSize.x/2.0f, titlePos.y + titleSize.y + 30.0f);
-    const Vector2 button2Pos = Vector2(mWindowWidth/2.0f - buttonSize.x/2.0f, button1Pos.y + buttonSize.y + 5.0f);
+    const Vector2 buttonSize = Vector2(220.0f, 50.0f);
+    const Vector2 button1Pos = Vector2(mWindowWidth/2.0f - buttonSize.x - 40.0f, 220.0f);
+    const Vector2 button2Pos = Vector2(mWindowWidth/2.0f + 40.0f, 300.0f);
+    const Vector2 cheeseSize = Vector2(48.0f, 48.0f);
+
+    mainMenu->AddImage("../Assets/Sprites/Collectables/Cheese.png", button1Pos - Vector2(cheeseSize.x + 10, 0), cheeseSize);
+    mainMenu->AddImage("../Assets/Sprites/Collectables/Cheese.png", button2Pos + Vector2(buttonSize.x + 10, 0), cheeseSize);
 
     mainMenu->AddButton("Single Player", button1Pos, buttonSize, [this]() {
         mIsTwoPlayerMode = false;
-        SetGameScene(GameScene::Level1);
+        SetGameScene(GameScene::Intro);
     });
     mainMenu->AddButton("Two Players", button2Pos, buttonSize, [this]() {
         mIsTwoPlayerMode = true;
-        SetGameScene(GameScene::Level1);
+        SetGameScene(GameScene::Intro);
     });
+
+    Uint32 ticks = SDL_GetTicks();
+    std::string mouseFrame = (ticks / 500) % 2 == 0 ? "../Assets/Sprites/Mouse/Run1.png" : "../Assets/Sprites/Mouse/Run2.png";
+    const Vector2 mouseSize = Vector2(96.0f, 96.0f);
+    const Vector2 mousePos = Vector2(mWindowWidth/2.0f - mouseSize.x/2.0f, mWindowHeight - mouseSize.y - 30.0f);
+    mainMenu->AddImage(mouseFrame, mousePos, mouseSize);
 }
 
 void Game::LoadLevel(const std::string& levelName, const int levelWidth, const int levelHeight)
@@ -569,6 +593,19 @@ void Game::UpdateGame()
     {
         // Reinsert level time
         UpdateLevelTime(deltaTime);
+    }
+
+    if (mGameScene == GameScene::Intro) {
+        mIntroTimer -= deltaTime;
+        if (mIntroTimer <= 0.0f) {
+
+
+            for (auto ui : mUIStack) {
+                ui->Close();
+            }
+            SetGameScene(GameScene::Level1);
+            // SetGameScene(GameScene::Level1, 5.0f);
+        }
     }
 
     UpdateSceneManager(deltaTime);

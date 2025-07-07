@@ -25,6 +25,7 @@ public:
     enum class GameScene
     {
         MainMenu,
+        Intro,
         Level1,
         Level2
     };
@@ -188,4 +189,7 @@ private:
     Vector2 mBackgroundPosition;
 
     bool mIsTwoPlayerMode = false;
+
+    void LoadIntroScreen();
+    float mIntroTimer = 0.0f;
 };

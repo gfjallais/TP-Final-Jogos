@@ -21,8 +21,6 @@ public:
     ~HUD();
 
     // Reinsert the HUD elements
-    void SetTime(int time);
-
     void SetLevelName(const std::string& levelName);
 
 private:
@@ -30,5 +28,4 @@ private:
     UIText* mScoreCounter;
     UIText* mLevelName;
     UIText* mLivesCount;
-    UIText* mTimeText;
 };
