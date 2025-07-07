@@ -2,23 +2,9 @@
 
 ## 📸 Screenshots
 
-(Adicione aqui as capturas de tela do jogo)
+- **GamePlay:**
+![Menu](Assets/Screenshots/game.gif)
 
-- **Menu:**
-![Menu](Assets/Screenshots/menu.png)
-
-- **Fase 1:**
-![Menu](Assets/Screenshots/fase1.png)
-
-- **Fase 2:**
-![Menu](Assets/Screenshots/fase2.png)
-
-
----
-
-## 🐭 Título
-
-**CheeseRun**
 
 ---
 
@@ -41,6 +27,7 @@ Durante o playtesting, os jogadores devem prestar atenção especial às seguint
 - Mecânica de *Wall Jump* (subida entre paredes)
 - Redução de velocidade ao coletar o queijo
 - Sons e efeitos visuais nos momentos-chave (ex: pegar o queijo, entrar na toca)
+- Uso do modo *Shaman* (Pressionar `X` para Player 1 e `M` para Player 2)
 
 ---
 
